@@ -9,6 +9,7 @@
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    html { scroll-behavior: smooth; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-40">
@@ -119,7 +120,6 @@
 
   <script>
     const LIFF_ID = '2010290704-NS1l65Na';
-    const LINE_ACCOUNT_ID = '@193liwzi'; // 公式LINE ID
 
     let scheduleData = null;
     let selectedDate = '';
@@ -128,12 +128,24 @@
     let selectedCourse = null;
     let isNominationRepeat = false;
     let isFirstVisit = true;
+    let isLiffInitialized = false;
 
     const today = new Date();
 
-    async function initLiff() {
-      try { await liff.init({ liffId: LIFF_ID }); } catch (err) {}
-    }
+    // LIFF初期化処理
+    window.onload = async function() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        isLiffInitialized = true;
+        if (!liff.isLoggedIn() && liff.isInClient()) {
+          liff.login();
+        }
+      } catch (err) {
+        console.error("LIFF Init Error:", err);
+      }
+      initDateTabs();
+      loadData();
+    };
 
     function initDateTabs() {
       const container = document.getElementById('dateContainer');
@@ -351,8 +363,12 @@
       }
     }
 
-    // ★権限エラーを完全に回避する確実な送信処理
-    function submitReservation() {
+    // ★画像通りのメッセージを緑色の吹き出しで即時投稿する最終処理
+    async function submitReservation() {
+      const btn = document.getElementById('nextBtn');
+      btn.disabled = true;
+      btn.innerText = '送信中...';
+
       const name = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
 
@@ -390,16 +406,22 @@
 一言だけで大丈夫ですので、
 忘れずにお願いいたします🙇‍♂️`;
 
-      // LINE URL SchemeでLINEアプリのトーク画面を直接開いてテキストを渡す
-      const encodedMsg = encodeURIComponent(messageText);
-      const lineUrl = `https://line.me/R/oaMessage/${LINE_ACCOUNT_ID}/?${encodedMsg}`;
-
-      window.location.href = lineUrl;
+      // LIFFのネイティブメッセージ送信
+      if (liff.isInClient()) {
+        try {
+          await liff.sendMessages([{ type: 'text', text: messageText }]);
+          liff.closeWindow(); // 送信成功後に画面を自動クローズ
+        } catch (err) {
+          alert('送信エラーが発生しました。LINEアプリを再起動してお試しください。\n' + err.message);
+          btn.disabled = false;
+          btn.innerText = '予約フォームを送信 (LINEヘ) ➔';
+        }
+      } else {
+        alert('【テスト表示】LINEアプリ内では、画像の緑色吹き出しとしてそのまま自動送信されます:\n\n' + messageText);
+        btn.disabled = false;
+        btn.innerText = '予約フォームを送信 (LINEヘ) ➔';
+      }
     }
-
-    initLiff();
-    initDateTabs();
-    loadData();
   </script>
 </body>
 </html>
