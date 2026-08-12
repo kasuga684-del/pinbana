@@ -119,6 +119,7 @@
 
   <script>
     const LIFF_ID = '2010290704-NS1l65Na';
+    const LINE_ACCOUNT_ID = '@193liwzi'; // 公式LINE ID
 
     let scheduleData = null;
     let selectedDate = '';
@@ -350,6 +351,7 @@
       }
     }
 
+    // ★権限エラーを完全に回避する確実な送信処理
     function submitReservation() {
       const name = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
@@ -388,13 +390,11 @@
 一言だけで大丈夫ですので、
 忘れずにお願いいたします🙇‍♂️`;
 
-      if (liff.isInClient()) {
-        liff.sendMessages([{ type: 'text', text: messageText }]).then(() => {
-          liff.closeWindow();
-        }).catch((err) => { alert('送信エラー: ' + err); });
-      } else {
-        alert('【テスト表示】LINE内では以下の文章が自動送信されます:\n\n' + messageText);
-      }
+      // LINE URL SchemeでLINEアプリのトーク画面を直接開いてテキストを渡す
+      const encodedMsg = encodeURIComponent(messageText);
+      const lineUrl = `https://line.me/R/oaMessage/${LINE_ACCOUNT_ID}/?${encodedMsg}`;
+
+      window.location.href = lineUrl;
     }
 
     initLiff();
