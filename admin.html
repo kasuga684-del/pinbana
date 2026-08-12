@@ -10,7 +10,7 @@
 
   <div class="flex h-screen overflow-hidden">
 
-    <!-- サイドバー (ナビゲーション) -->
+    <!-- サイドバー -->
     <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-6">
       <div class="space-y-8">
         <div>
@@ -18,13 +18,12 @@
           <h1 class="text-lg font-extrabold text-white">店舗管理パネル</h1>
         </div>
 
-        <!-- タブ切替メニュー -->
         <nav class="space-y-2">
           <button onclick="switchTab('casts')" id="tabBtn-casts" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-pink-600 text-white transition-all">
             👤 キャスト情報管理
           </button>
-          <button onclick="switchTab('courses')" id="tabBtn-courses" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
-            💰 料金・コース設定
+          <button onclick="switchTab('pricing')" id="tabBtn-pricing" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+            💰 料金・基本設定
           </button>
           <button onclick="switchTab('schedules')" id="tabBtn-schedules" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
             📅 出勤・予約枠コントロール
@@ -39,15 +38,15 @@
       </div>
     </aside>
 
-    <!-- メインコンテンツ領域 -->
+    <!-- メイン領域 -->
     <main class="flex-1 overflow-y-auto p-8 space-y-6">
 
-      <!-- ================= 項目 1: キャスト情報管理 ================= -->
+      <!-- ================= 1. キャスト情報管理 ================= -->
       <section id="section-casts" class="tab-content space-y-6">
         <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
           <div>
             <h2 class="text-xl font-bold text-white">👤 キャスト情報</h2>
-            <p class="text-xs text-slate-400 mt-1">店舗に所属するキャストのプロフィール・写真・指名料を管理します</p>
+            <p class="text-xs text-slate-400 mt-1">プロフィールの編集、スリーサイズ・身長、新人マークのON/OFFを設定します</p>
           </div>
           <div class="flex gap-3">
             <button onclick="addNewCast()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700">
@@ -59,63 +58,94 @@
           </div>
         </div>
 
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-          <table class="w-full text-left border-collapse">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr class="bg-slate-950 text-slate-400 text-xs border-b border-slate-800">
-                <th class="p-4">写真</th>
-                <th class="p-4">名前</th>
-                <th class="p-4">年齢</th>
-                <th class="p-4">キャッチコピー / タグ</th>
-                <th class="p-4">本指名料 (円)</th>
-                <th class="p-4">画像URL</th>
-                <th class="p-4 text-right">操作</th>
+                <th class="p-3">新人</th>
+                <th class="p-3">写真</th>
+                <th class="p-3">名前</th>
+                <th class="p-3">年齢</th>
+                <th class="p-3">身長</th>
+                <th class="p-3">B / Cup / W / H</th>
+                <th class="p-3">画像URL</th>
+                <th class="p-3 text-right">操作</th>
               </tr>
             </thead>
-            <tbody id="castTableBody" class="divide-y divide-slate-800/60 text-sm">
-              <!-- JSでテーブル行を生成 -->
-            </tbody>
+            <tbody id="castTableBody" class="divide-y divide-slate-800/60 text-xs"></tbody>
           </table>
         </div>
       </section>
 
 
-      <!-- ================= 項目 2: 料金・コース設定 ================= -->
-      <section id="section-courses" class="tab-content space-y-6 hidden">
+      <!-- ================= 2. 料金・基本設定 ================= -->
+      <section id="section-pricing" class="tab-content space-y-6 hidden">
         <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
           <div>
-            <h2 class="text-xl font-bold text-white">💰 料金・コース設定</h2>
-            <p class="text-xs text-slate-400 mt-1">予約フォームで選択できるコース時間と料金を設定します</p>
+            <h2 class="text-xl font-bold text-white">💰 料金・基本設定</h2>
+            <p class="text-xs text-slate-400 mt-1">入会金・本指名料・通常/新人料金コース・時間別ホテル代を設定します</p>
           </div>
-          <div class="flex gap-3">
-            <button onclick="addNewCourse()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700">
-              ＋ コース追加
-            </button>
-            <button onclick="saveData('courses')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
-              💾 料金設定を更新
-            </button>
+          <button onclick="saveData('pricing')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
+            💾 料金設定を更新
+          </button>
+        </div>
+
+        <!-- 基本手数料 -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <h3 class="text-sm font-bold text-pink-400 border-l-4 border-pink-500 pl-2">基本料金設定</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">入会金 (円)</label>
+              <input type="number" id="baseAdmissionFee" class="bg-slate-950 text-white px-3 py-2 rounded-lg border border-slate-800 w-full font-bold">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">本指名料 (円)</label>
+              <input type="number" id="baseNominationFee" class="bg-slate-950 text-white px-3 py-2 rounded-lg border border-slate-800 w-full font-bold">
+            </div>
           </div>
         </div>
 
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+        <!-- コース料金設定 -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-bold text-pink-400 border-l-4 border-pink-500 pl-2">コース時間 ＆ 料金設定（通常 / 新人割）</h3>
+            <button onclick="addNewCourse()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700">＋ コース追加</button>
+          </div>
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-950 text-slate-400 text-xs border-b border-slate-800">
-                <th class="p-4">コース名</th>
-                <th class="p-4">時間 (分)</th>
-                <th class="p-4">料金 (円)</th>
-                <th class="p-4 text-right">操作</th>
+                <th class="p-3">コース名</th>
+                <th class="p-3">時間 (分)</th>
+                <th class="p-3">通常料金 (円)</th>
+                <th class="p-3">新人割引料金 (円)</th>
+                <th class="p-3 text-right">操作</th>
               </tr>
             </thead>
-            <tbody id="courseTableBody" class="divide-y divide-slate-800/60 text-sm">
-              <!-- JSでテーブル行を生成 -->
-            </tbody>
+            <tbody id="courseTableBody" class="divide-y divide-slate-800/60 text-xs"></tbody>
+          </table>
+        </div>
+
+        <!-- ホテル代設定 -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-bold text-pink-400 border-l-4 border-pink-500 pl-2">時間別ホテル代設定</h3>
+            <button onclick="addNewHotelFee()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700">＋ 時間枠追加</button>
+          </div>
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-950 text-slate-400 text-xs border-b border-slate-800">
+                <th class="p-3">利用時間 (分)</th>
+                <th class="p-3">ホテル料金 (円)</th>
+                <th class="p-3 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="hotelTableBody" class="divide-y divide-slate-800/60 text-xs"></tbody>
           </table>
         </div>
       </section>
 
 
-      <!-- ================= 項目 3: 出勤・予約枠コントロール ================= -->
+      <!-- ================= 3. 出勤・予約枠コントロール ================= -->
       <section id="section-schedules" class="tab-content space-y-6 hidden">
         <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
           <div>
@@ -133,9 +163,7 @@
           </div>
         </div>
 
-        <div id="scheduleContainer" class="space-y-6">
-          <!-- JSでキャストごとの出勤・〇×コマを一覧生成 -->
-        </div>
+        <div id="scheduleContainer" class="space-y-6"></div>
       </section>
 
     </main>
@@ -151,6 +179,9 @@
 
     const todayStr = new Date().toISOString().split('T')[0];
     document.getElementById('datePicker').value = todayStr;
+
+    // 定数プルダウン用リスト
+    const CUP_LIST = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
 
     function getToken() {
       let token = localStorage.getItem('github_pat');
@@ -170,7 +201,6 @@
       }
     }
 
-    // タブ切替処理
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(el => {
@@ -184,7 +214,6 @@
       activeBtn.classList.remove('bg-slate-800', 'text-slate-400');
     }
 
-    // GitHubから全データ読み込み
     async function loadData() {
       const token = getToken();
       if (!token) return;
@@ -203,38 +232,69 @@
         const content = decodeURIComponent(escape(atob(json.content)));
         scheduleData = JSON.parse(content);
 
-        // 初期データの補填
+        // データ互換補填
+        if (!scheduleData.pricing) {
+          scheduleData.pricing = { admissionFee: 3000, nominationFee: 3000 };
+        }
         if (!scheduleData.courses) {
           scheduleData.courses = [
-            { id: "c60", name: "60分コース", minutes: 60, price: 20000 },
-            { id: "c90", name: "90分コース", minutes: 90, price: 28000 }
+            { id: "c60", name: "60分コース", minutes: 60, priceNormal: 20000, priceRookie: 18000 },
+            { id: "c90", name: "90分コース", minutes: 90, priceNormal: 28000, priceRookie: 25000 }
+          ];
+        }
+        if (!scheduleData.hotelFees) {
+          scheduleData.hotelFees = [
+            { minutes: 60, price: 3000 },
+            { minutes: 90, price: 4000 }
           ];
         }
 
         renderCasts();
-        renderCourses();
+        renderPricing();
         renderSchedules();
       } catch (err) {
         alert('データの取得に失敗しました。トークンを確認してください。');
       }
     }
 
-    /* --- 1. キャスト情報描画 --- */
+    /* --- 1. キャスト描画 --- */
     function renderCasts() {
       const tbody = document.getElementById('castTableBody');
       tbody.innerHTML = '';
 
       scheduleData.casts.forEach((cast, idx) => {
+        // デフォルト補填
+        if (!cast.height) cast.height = 160;
+        if (!cast.bust) cast.bust = 85;
+        if (!cast.cup) cast.cup = 'D';
+        if (!cast.waist) cast.waist = 58;
+        if (!cast.hip) cast.hip = 86;
+        if (cast.isRookie === undefined) cast.isRookie = false;
+
+        let cupOptions = CUP_LIST.map(c => `<option value="${c}" ${cast.cup === c ? 'selected' : ''}>${c}</option>`).join('');
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/40 transition-all';
         tr.innerHTML = `
-          <td class="p-4"><img src="${cast.photo}" class="w-10 h-10 object-cover rounded-lg bg-slate-800 border border-slate-700"></td>
-          <td class="p-4"><input type="text" value="${cast.name}" onchange="scheduleData.casts[${idx}].name = this.value" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-32"></td>
-          <td class="p-4"><input type="number" value="${cast.age}" onchange="scheduleData.casts[${idx}].age = Number(this.value)" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-16"></td>
-          <td class="p-4"><input type="text" value="${cast.tag}" onchange="scheduleData.casts[${idx}].tag = this.value" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-48"></td>
-          <td class="p-4"><input type="number" value="${cast.nominationFee}" onchange="scheduleData.casts[${idx}].nominationFee = Number(this.value)" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-28"></td>
-          <td class="p-4"><input type="text" value="${cast.photo}" onchange="scheduleData.casts[${idx}].photo = this.value" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-64 text-xs"></td>
-          <td class="p-4 text-right"><button onclick="deleteCast(${idx})" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-3 py-1 bg-rose-950/40 border border-rose-800 rounded-lg">削除</button></td>
+          <td class="p-3 text-center">
+            <input type="checkbox" ${cast.isRookie ? 'checked' : ''} onchange="scheduleData.casts[${idx}].isRookie = this.checked" class="w-4 h-4 accent-pink-500">
+          </td>
+          <td class="p-3"><img src="${cast.photo}" class="w-9 h-9 object-cover rounded-lg bg-slate-800 border border-slate-700"></td>
+          <td class="p-3"><input type="text" value="${cast.name}" onchange="scheduleData.casts[${idx}].name = this.value" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-28"></td>
+          <td class="p-3"><input type="number" value="${cast.age}" onchange="scheduleData.casts[${idx}].age = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-14"></td>
+          <td class="p-3"><input type="number" min="135" max="180" value="${cast.height}" onchange="scheduleData.casts[${idx}].height = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-16"> cm</td>
+          <td class="p-3">
+            <div class="flex items-center gap-1">
+              <input type="number" min="70" max="100" value="${cast.bust}" onchange="scheduleData.casts[${idx}].bust = Number(this.value)" class="bg-slate-950 text-white p-1 rounded border border-slate-800 w-12">
+              <select onchange="scheduleData.casts[${idx}].cup = this.value" class="bg-slate-950 text-white p-1 rounded border border-slate-800">${cupOptions}</select>
+              <span>/</span>
+              <input type="number" min="50" max="100" value="${cast.waist}" onchange="scheduleData.casts[${idx}].waist = Number(this.value)" class="bg-slate-950 text-white p-1 rounded border border-slate-800 w-12">
+              <span>/</span>
+              <input type="number" min="60" max="100" value="${cast.hip}" onchange="scheduleData.casts[${idx}].hip = Number(this.value)" class="bg-slate-950 text-white p-1 rounded border border-slate-800 w-12">
+            </div>
+          </td>
+          <td class="p-3"><input type="text" value="${cast.photo}" onchange="scheduleData.casts[${idx}].photo = this.value" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-48 text-[10px]"></td>
+          <td class="p-3 text-right"><button onclick="deleteCast(${idx})" class="text-rose-400 hover:text-rose-300 font-bold px-2 py-1 bg-rose-950/40 border border-rose-800 rounded">削除</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -243,68 +303,83 @@
     function addNewCast() {
       const newId = 'cast_' + String(scheduleData.casts.length + 1).padStart(2, '0');
       scheduleData.casts.push({
-        id: newId,
-        name: '新規キャスト',
-        age: 20,
-        tag: '新人',
-        photo: 'https://via.placeholder.com/150',
-        nominationFee: 3000
+        id: newId, name: '新規キャスト', age: 20, height: 160, bust: 85, cup: 'D', waist: 58, hip: 86, isRookie: true, photo: 'https://via.placeholder.com/150'
       });
       renderCasts();
     }
 
     function deleteCast(idx) {
-      if (confirm('このキャストを削除してもよろしいですか？')) {
+      if (confirm('このキャストを削除しますか？')) {
         scheduleData.casts.splice(idx, 1);
         renderCasts();
       }
     }
 
-    /* --- 2. 料金・コース描画 --- */
-    function renderCourses() {
-      const tbody = document.getElementById('courseTableBody');
-      tbody.innerHTML = '';
+    /* --- 2. 料金描画 --- */
+    function renderPricing() {
+      // 基本料金
+      document.getElementById('baseAdmissionFee').value = scheduleData.pricing.admissionFee || 0;
+      document.getElementById('baseNominationFee').value = scheduleData.pricing.nominationFee || 0;
 
+      document.getElementById('baseAdmissionFee').onchange = (e) => scheduleData.pricing.admissionFee = Number(e.target.value);
+      document.getElementById('baseNominationFee').onchange = (e) => scheduleData.pricing.nominationFee = Number(e.target.value);
+
+      // コース料金
+      const courseTbody = document.getElementById('courseTableBody');
+      courseTbody.innerHTML = '';
       scheduleData.courses.forEach((course, idx) => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800/40 transition-all';
+        tr.className = 'hover:bg-slate-800/40';
         tr.innerHTML = `
-          <td class="p-4"><input type="text" value="${course.name}" onchange="scheduleData.courses[${idx}].name = this.value" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-48"></td>
-          <td class="p-4"><input type="number" value="${course.minutes}" onchange="scheduleData.courses[${idx}].minutes = Number(this.value)" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-24"></td>
-          <td class="p-4"><input type="number" value="${course.price}" onchange="scheduleData.courses[${idx}].price = Number(this.value)" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-32"></td>
-          <td class="p-4 text-right"><button onclick="deleteCourse(${idx})" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-3 py-1 bg-rose-950/40 border border-rose-800 rounded-lg">削除</button></td>
+          <td class="p-3"><input type="text" value="${course.name}" onchange="scheduleData.courses[${idx}].name = this.value" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-36"></td>
+          <td class="p-3"><input type="number" value="${course.minutes}" onchange="scheduleData.courses[${idx}].minutes = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-20"> 分</td>
+          <td class="p-3"><input type="number" value="${course.priceNormal}" onchange="scheduleData.courses[${idx}].priceNormal = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-28"> 円</td>
+          <td class="p-3"><input type="number" value="${course.priceRookie}" onchange="scheduleData.courses[${idx}].priceRookie = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-28"> 円</td>
+          <td class="p-3 text-right"><button onclick="deleteCourse(${idx})" class="text-rose-400 font-bold px-2 py-1 bg-rose-950/40 border border-rose-800 rounded">削除</button></td>
         `;
-        tbody.appendChild(tr);
+        courseTbody.appendChild(tr);
+      });
+
+      // ホテル代
+      const hotelTbody = document.getElementById('hotelTableBody');
+      hotelTbody.innerHTML = '';
+      scheduleData.hotelFees.forEach((hotel, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40';
+        tr.innerHTML = `
+          <td class="p-3"><input type="number" value="${hotel.minutes}" onchange="scheduleData.hotelFees[${idx}].minutes = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-24"> 分</td>
+          <td class="p-3"><input type="number" value="${hotel.price}" onchange="scheduleData.hotelFees[${idx}].price = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-32"> 円</td>
+          <td class="p-3 text-right"><button onclick="deleteHotelFee(${idx})" class="text-rose-400 font-bold px-2 py-1 bg-rose-950/40 border border-rose-800 rounded">削除</button></td>
+        `;
+        hotelTbody.appendChild(tr);
       });
     }
 
     function addNewCourse() {
-      scheduleData.courses.push({
-        id: 'c_' + Date.now(),
-        name: '新コース',
-        minutes: 60,
-        price: 20000
-      });
-      renderCourses();
+      scheduleData.courses.push({ id: 'c_' + Date.now(), name: '新コース', minutes: 60, priceNormal: 20000, priceRookie: 18000 });
+      renderPricing();
     }
-
     function deleteCourse(idx) {
-      if (confirm('このコースを削除しますか？')) {
-        scheduleData.courses.splice(idx, 1);
-        renderCourses();
-      }
+      scheduleData.courses.splice(idx, 1);
+      renderPricing();
     }
 
-    /* --- 3. 出勤・〇×コマ描画 --- */
+    function addNewHotelFee() {
+      scheduleData.hotelFees.push({ minutes: 60, price: 3000 });
+      renderPricing();
+    }
+    function deleteHotelFee(idx) {
+      scheduleData.hotelFees.splice(idx, 1);
+      renderPricing();
+    }
+
+    /* --- 3. 出勤描画 --- */
     function renderSchedules() {
       const container = document.getElementById('scheduleContainer');
       container.innerHTML = '';
 
       const targetDate = document.getElementById('datePicker').value;
-      if (!scheduleData.schedules[targetDate]) {
-        scheduleData.schedules[targetDate] = {};
-      }
-
+      if (!scheduleData.schedules[targetDate]) scheduleData.schedules[targetDate] = {};
       const daySchedules = scheduleData.schedules[targetDate];
 
       scheduleData.casts.forEach(cast => {
@@ -312,29 +387,24 @@
         const slots = daySchedules[cast.id];
 
         const card = document.createElement('div');
-        card.className = 'bg-slate-900 rounded-2xl p-6 border border-slate-800 space-y-4';
+        card.className = 'bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4';
 
         let slotsHtml = '<div class="grid grid-cols-6 sm:grid-cols-12 gap-2 mt-2">';
         const timeKeys = Object.keys(slots).sort();
 
         if (timeKeys.length === 0) {
-          slotsHtml += '<p class="col-span-full text-xs text-slate-500 italic">※出勤時間が設定されていません</p>';
+          slotsHtml += '<p class="col-span-full text-xs text-slate-500 italic">※出勤枠未設定</p>';
         } else {
           timeKeys.forEach(time => {
             const status = slots[time];
             const isOK = status === 'ok';
 
             slotsHtml += `
-              <button
-                onclick="toggleSlot('${cast.id}', '${time}')"
-                class="p-2 rounded-xl border flex flex-col items-center justify-center font-bold transition-all ${
-                  isOK
-                    ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400 hover:bg-emerald-900/50'
-                    : 'bg-rose-950/40 border-rose-800 text-rose-400 hover:bg-rose-900/50'
-                }"
-              >
+              <button onclick="toggleSlot('${cast.id}', '${time}')" class="p-2 rounded-xl border flex flex-col items-center justify-center font-bold transition-all ${
+                isOK ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400' : 'bg-rose-950/40 border-rose-800 text-rose-400'
+              }">
                 <span class="text-[10px] text-slate-400 font-mono">${time}</span>
-                <span class="text-sm">${isOK ? '〇' : '×'}</span>
+                <span class="text-xs">${isOK ? '〇' : '×'}</span>
               </button>
             `;
           });
@@ -345,14 +415,14 @@
           <div class="flex justify-between items-center pb-3 border-b border-slate-800">
             <div class="flex items-center gap-3">
               <img src="${cast.photo}" class="w-8 h-8 object-cover rounded-lg bg-slate-800">
-              <h3 class="font-bold text-white">${cast.name}</h3>
+              <h3 class="font-bold text-white text-sm">${cast.name} ${cast.isRookie ? '<span class="text-[10px] bg-pink-950 text-pink-400 px-1.5 py-0.5 rounded border border-pink-800">新人</span>' : ''}</h3>
             </div>
             <div class="flex items-center gap-2 text-xs bg-slate-950 p-2 rounded-xl border border-slate-800">
-              <span class="text-slate-400 font-bold">出勤範囲:</span>
+              <span class="text-slate-400 font-bold">出勤時間:</span>
               <input type="time" id="start_${cast.id}" value="12:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1">
               <span>〜</span>
               <input type="time" id="end_${cast.id}" value="20:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1">
-              <button onclick="generateShift('${cast.id}')" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded text-xs font-bold border border-slate-700">コマ一括生成</button>
+              <button onclick="generateShift('${cast.id}')" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded text-xs font-bold border border-slate-700">一括生成</button>
             </div>
           </div>
           ${slotsHtml}
@@ -365,19 +435,16 @@
       const targetDate = document.getElementById('datePicker').value;
       const start = document.getElementById(`start_${castId}`).value;
       const end = document.getElementById(`end_${castId}`).value;
-
       if (!start || !end) return;
 
       let current = new Date(`2026-01-01T${start}:00`);
       const endDate = new Date(`2026-01-01T${end}:00`);
-
       const newSlots = {};
       while (current < endDate) {
         const timeStr = current.toTimeString().substring(0, 5);
         newSlots[timeStr] = "ok";
         current.setMinutes(current.getMinutes() + 30);
       }
-
       scheduleData.schedules[targetDate][castId] = newSlots;
       renderSchedules();
     }
@@ -389,7 +456,6 @@
       renderSchedules();
     }
 
-    /* --- GitHubへの一括保存 (各ボタン共通) --- */
     async function saveData(targetCategoryName) {
       const token = getToken();
       if (!token) return;
