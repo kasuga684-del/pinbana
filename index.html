@@ -5,14 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WEB予約フォーム</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- LIFF SDK -->
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-28">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-36">
 
   <header class="sticky top-0 bg-slate-950/90 backdrop-blur border-b border-slate-800 p-4 text-center z-20">
     <h1 class="text-lg font-black tracking-wider text-pink-500">WEB RESERVATION</h1>
@@ -38,24 +37,33 @@
 
     <!-- 3. コース選択 -->
     <section id="courseSection" class="space-y-2 hidden">
-      <label class="text-xs font-bold text-slate-400 block">⏱ コースを選択</label>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="selectCourse(60, 20000)" id="c60" class="p-3 rounded-xl border border-slate-800 bg-slate-900 text-left font-bold hover:border-pink-500">
-          <div class="text-xs text-pink-400">60分コース</div>
-          <div class="text-sm">¥20,000</div>
-        </button>
-        <button onclick="selectCourse(90, 28000)" id="c90" class="p-3 rounded-xl border border-slate-800 bg-slate-900 text-left font-bold hover:border-pink-500">
-          <div class="text-xs text-pink-400">90分コース</div>
-          <div class="text-sm">¥28,000</div>
-        </button>
+      <div class="flex justify-between items-center">
+        <label class="text-xs font-bold text-slate-400">⏱ コースを選択</label>
+        <span id="rookieBadge" class="text-[10px] bg-pink-950 text-pink-400 px-2 py-0.5 rounded border border-pink-800 font-bold hidden">🎉 新人割引適応中</span>
+      </div>
+      <div id="courseContainer" class="grid grid-cols-2 gap-2"></div>
+    </section>
+
+    <!-- 4. 概算料金の内訳計算 -->
+    <section id="priceBreakdownSection" class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs hidden">
+      <h3 class="font-bold text-slate-300 border-b border-slate-800 pb-2">🧾 お支払概算内訳</h3>
+      <div class="space-y-1 text-slate-400">
+        <div class="flex justify-between"><span>コース料金:</span><span id="pCourse">¥0</span></div>
+        <div class="flex justify-between"><span>本指名料:</span><span id="pNomination">¥0</span></div>
+        <div class="flex justify-between"><span>入会金 (初回):</span><span id="pAdmission">¥0</span></div>
+        <div class="flex justify-between"><span>ホテル代 (概算):</span><span id="pHotel">¥0</span></div>
+      </div>
+      <div class="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm text-pink-400">
+        <span>概算合計金額:</span>
+        <span id="pTotal">¥0</span>
       </div>
     </section>
 
   </main>
 
-  <!-- フッター固定 -->
-  <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 border-t border-slate-800 p-4 backdrop-blur-md z-30">
-    <div class="flex justify-between items-center mb-2 text-xs">
+  <!-- フッター -->
+  <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 border-t border-slate-800 p-4 backdrop-blur-md z-30 space-y-2">
+    <div class="flex justify-between items-center text-xs">
       <span class="text-slate-400">選択状況:</span>
       <span id="selectedInfoText" class="font-bold text-pink-400">未選択</span>
     </div>
@@ -65,24 +73,18 @@
   </div>
 
   <script>
-    // ★ご自身の LIFF ID を設定してください
     const LIFF_ID = 'YOUR_LIFF_ID';
 
     let scheduleData = null;
     let selectedDate = '';
     let selectedCast = null;
     let selectedTime = '';
-    let selectedCourseMinutes = 0;
+    let selectedCourse = null;
 
     const today = new Date();
 
-    // LIFFの初期化
     async function initLiff() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
-      } catch (err) {
-        console.error('LIFF Error:', err);
-      }
+      try { await liff.init({ liffId: LIFF_ID }); } catch (err) {}
     }
 
     function initDateTabs() {
@@ -105,17 +107,16 @@
 
         const btn = document.createElement('button');
         btn.className = `flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-          selectedDate === dateStr
-            ? 'bg-pink-600 text-white border-pink-400 shadow-lg'
-            : 'bg-slate-900 text-slate-300 border-slate-800'
+          selectedDate === dateStr ? 'bg-pink-600 text-white border-pink-400 shadow-lg' : 'bg-slate-900 text-slate-300 border-slate-800'
         }`;
         btn.innerText = displayStr;
         btn.onclick = () => {
           selectedDate = dateStr;
           selectedCast = null;
           selectedTime = '';
-          selectedCourseMinutes = 0;
+          selectedCourse = null;
           document.getElementById('courseSection').classList.add('hidden');
+          document.getElementById('priceBreakdownSection').classList.add('hidden');
           initDateTabs();
           renderCastList();
           updateFooter();
@@ -129,9 +130,7 @@
         const res = await fetch('./schedule.json?t=' + Date.now());
         scheduleData = await res.json();
         renderCastList();
-      } catch (err) {
-        document.getElementById('castListContainer').innerHTML = '<p class="text-xs text-red-400">データの読み込みに失敗しました</p>';
-      }
+      } catch (err) {}
     }
 
     function renderCastList() {
@@ -152,7 +151,7 @@
 
         let slotsHtml = '';
         if (timeKeys.length === 0) {
-          slotsHtml = '<p class="text-xs text-slate-500 italic mt-2">※本日お休み、または準備中です</p>';
+          slotsHtml = '<p class="text-xs text-slate-500 italic mt-2">※本日はお休みです</p>';
         } else {
           slotsHtml = '<div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar mt-3">';
           timeKeys.forEach(time => {
@@ -161,19 +160,10 @@
             const isNG = status === 'ng';
 
             slotsHtml += `
-              <button
-                ${isNG ? 'disabled' : ''}
-                onclick="selectSlot('${cast.id}', '${time}')"
-                class="flex-none px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                  isNG
-                    ? 'bg-slate-950 text-slate-600 border-transparent cursor-not-allowed'
-                    : isSelected
-                    ? 'bg-pink-600 text-white border-pink-400 scale-105 shadow-lg'
-                    : 'bg-slate-800 text-slate-200 border-slate-700'
-                }"
-              >
-                ${status === 'ok' ? '〇 ' : '× '}
-                ${time}
+              <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                isNG ? 'bg-slate-950 text-slate-600 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-400 scale-105 shadow-lg' : 'bg-slate-800 text-slate-200 border-slate-700'
+              }">
+                ${status === 'ok' ? '〇 ' : '× '} ${time}
               </button>
             `;
           });
@@ -184,9 +174,11 @@
           <div class="flex gap-3 items-center">
             <img src="${cast.photo}" class="w-16 h-16 object-cover rounded-xl bg-slate-800" />
             <div>
-              <span class="text-[10px] px-2 py-0.5 rounded bg-pink-950 text-pink-400 border border-pink-800/50">${cast.tag}</span>
-              <h3 class="font-bold text-base mt-1">${cast.name} <span class="text-xs text-slate-400">(${cast.age})</span></h3>
-              <p class="text-xs text-slate-400">指名料: ¥${cast.nominationFee.toLocaleString()}</p>
+              <div class="flex items-center gap-1.5">
+                <h3 class="font-bold text-base">${cast.name} <span class="text-xs text-slate-400">(${cast.age})</span></h3>
+                ${cast.isRookie ? '<span class="text-[9px] bg-pink-950 text-pink-400 px-1.5 py-0.5 rounded border border-pink-800 font-bold">新人</span>' : ''}
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5">T${cast.height} / B${cast.bust}(${cast.cup}) / W${cast.waist} / H${cast.hip}</p>
             </div>
           </div>
           ${slotsHtml}
@@ -198,24 +190,77 @@
     function selectSlot(castId, time) {
       selectedCast = scheduleData.casts.find(c => c.id === castId);
       selectedTime = time;
-      document.getElementById('courseSection').classList.remove('hidden');
+      selectedCourse = null;
+      renderCourses();
       renderCastList();
       updateFooter();
     }
 
-    function selectCourse(min, price) {
-      selectedCourseMinutes = min;
-      document.getElementById('c60').classList.toggle('border-pink-500', min === 60);
-      document.getElementById('c90').classList.toggle('border-pink-500', min === 90);
+    function renderCourses() {
+      const section = document.getElementById('courseSection');
+      const container = document.getElementById('courseContainer');
+      const rookieBadge = document.getElementById('rookieBadge');
+      container.innerHTML = '';
+      section.classList.remove('hidden');
+
+      if (selectedCast.isRookie) {
+        rookieBadge.classList.remove('hidden');
+      } else {
+        rookieBadge.classList.add('hidden');
+      }
+
+      scheduleData.courses.forEach(c => {
+        const price = selectedCast.isRookie ? c.priceRookie : c.priceNormal;
+        const isSelected = selectedCourse?.id === c.id;
+
+        const btn = document.createElement('button');
+        btn.onclick = () => selectCourse(c);
+        btn.className = `p-3 rounded-xl border text-left font-bold transition-all ${
+          isSelected ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-900 text-slate-300'
+        }`;
+        btn.innerHTML = `
+          <div class="text-xs text-pink-400">${c.name} (${c.minutes}分)</div>
+          <div class="text-sm mt-0.5">¥${price.toLocaleString()}</div>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    function selectCourse(course) {
+      selectedCourse = course;
+      renderCourses();
+      calculateBreakdown();
       updateFooter();
+    }
+
+    function calculateBreakdown() {
+      if (!selectedCast || !selectedCourse) return;
+
+      const breakdownSec = document.getElementById('priceBreakdownSection');
+      breakdownSec.classList.remove('hidden');
+
+      const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
+      const nominationFee = scheduleData.pricing.nominationFee || 0;
+      const admissionFee = scheduleData.pricing.admissionFee || 0;
+      
+      const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
+      const hotelPrice = hotelObj ? hotelObj.price : 0;
+
+      const total = coursePrice + nominationFee + admissionFee + hotelPrice;
+
+      document.getElementById('pCourse').innerText = `¥${coursePrice.toLocaleString()}`;
+      document.getElementById('pNomination').innerText = `¥${nominationFee.toLocaleString()}`;
+      document.getElementById('pAdmission').innerText = `¥${admissionFee.toLocaleString()}`;
+      document.getElementById('pHotel').innerText = `¥${hotelPrice.toLocaleString()}`;
+      document.getElementById('pTotal').innerText = `¥${total.toLocaleString()}`;
     }
 
     function updateFooter() {
       const btn = document.getElementById('nextBtn');
       const text = document.getElementById('selectedInfoText');
 
-      if (selectedCast && selectedTime && selectedCourseMinutes) {
-        text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourseMinutes}分)`;
+      if (selectedCast && selectedTime && selectedCourse) {
+        text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourse.name})`;
         btn.disabled = false;
       } else if (selectedCast && selectedTime) {
         text.innerText = `${selectedCast.name} ${selectedTime}~ (コース未選択)`;
@@ -226,30 +271,33 @@
       }
     }
 
-    // 予約内容をLINEへ送信するメイン処理
     function submitReservation() {
+      const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
+      const nominationFee = scheduleData.pricing.nominationFee || 0;
+      const admissionFee = scheduleData.pricing.admissionFee || 0;
+      const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
+      const hotelPrice = hotelObj ? hotelObj.price : 0;
+      const total = coursePrice + nominationFee + admissionFee + hotelPrice;
+
       const messageText = 
 `🌸 WEB予約フォームリクエスト 🌸
 ------------------
 ■ 日時: ${selectedDate} ${selectedTime}〜
-■ 指名: ${selectedCast.name}
-■ コース: ${selectedCourseMinutes}分
+■ 指名: ${selectedCast.name} ${selectedCast.isRookie ? '(新人)' : ''}
+■ コース: ${selectedCourse.name}
+■ 概算合計: ¥${total.toLocaleString()}
 ------------------
 
 ※重要なご案内※
 予約を確定させるために、
-必ずこのトークに直接「予約希望」と送信してください✨
-
-上記メッセージがないと案内ができない仕組みになっております。よろしくお願いします！`;
+必ずこのトークに直接「予約希望」と送信してください✨`;
 
       if (liff.isInClient()) {
         liff.sendMessages([{ type: 'text', text: messageText }]).then(() => {
-          liff.closeWindow(); // トーク画面へ戻る
-        }).catch((err) => {
-          alert('送信エラー: ' + err);
-        });
+          liff.closeWindow();
+        }).catch((err) => { alert('送信エラー: ' + err); });
       } else {
-        alert('【テスト表示】LINE内では以下の文章がトーク画面へ直接送られます:\n\n' + messageText);
+        alert('【テスト表示】LINE内では以下の文章が自動送信されます:\n\n' + messageText);
       }
     }
 
