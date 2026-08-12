@@ -49,10 +49,10 @@
       <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
         <label id="castPlayTitle" class="text-xs text-slate-300 font-bold block">〇〇とのお遊び</label>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="setNomination(true)" id="nomTrueBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-pink-500 bg-pink-950/30 text-white">
+          <button type="button" onclick="setNomination(false)" id="nomFirstBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-pink-500 bg-pink-950/30 text-white">
             初めて
           </button>
-          <button type="button" onclick="setNomination(false)" id="nomFalseBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-slate-800 bg-slate-950 text-slate-400">
+          <button type="button" onclick="setNomination(true)" id="nomRepeatBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-slate-800 bg-slate-950 text-slate-400">
             2回目以降
           </button>
         </div>
@@ -125,8 +125,8 @@
     let selectedCast = null;
     let selectedTime = '';
     let selectedCourse = null;
-    let isNomination = true;
-    let isFirstVisit = true;
+    let isNominationRepeat = false; // 指名: デフォルト「初めて（¥0）」
+    let isFirstVisit = true;        // 店利用: デフォルト「初めて（+¥1,000）」
 
     const today = new Date();
 
@@ -240,7 +240,6 @@
       selectedTime = time;
       selectedCourse = null;
 
-      // ラベル名を「選択したキャスト名 + とのお遊び」に変更
       document.getElementById('castPlayTitle').innerText = `${selectedCast.name}とのお遊び`;
 
       document.getElementById('courseSection').classList.remove('hidden');
@@ -280,10 +279,10 @@
       });
     }
 
-    function setNomination(val) {
-      isNomination = val;
-      document.getElementById('nomTrueBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${val ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
-      document.getElementById('nomFalseBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${!val ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
+    function setNomination(isRepeat) {
+      isNominationRepeat = isRepeat;
+      document.getElementById('nomFirstBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${!isRepeat ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
+      document.getElementById('nomRepeatBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${isRepeat ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
       updateCalculation();
     }
 
@@ -304,8 +303,8 @@
       document.getElementById('priceBreakdownSection').classList.remove('hidden');
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = isNomination ? (scheduleData.pricing.nominationFee || 1000) : 0;
-      const admissionFee = isFirstVisit ? (scheduleData.pricing.admissionFee || 1000) : 0;
+      const nominationFee = isNominationRepeat ? 1000 : 0; // 2回目以降なら1000円、初めてなら0円
+      const admissionFee = isFirstVisit ? 1000 : 0;        // 初めてなら1000円、2回目以降なら0円
       
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
@@ -348,8 +347,8 @@
       const phone = document.getElementById('custPhone').value.trim();
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = isNomination ? (scheduleData.pricing.nominationFee || 1000) : 0;
-      const admissionFee = isFirstVisit ? (scheduleData.pricing.admissionFee || 1000) : 0;
+      const nominationFee = isNominationRepeat ? 1000 : 0;
+      const admissionFee = isFirstVisit ? 1000 : 0;
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
       const total = coursePrice + nominationFee + admissionFee + hotelPrice;
@@ -359,10 +358,10 @@
 ------------------
 ■ お客様名: ${name} 様
 ■ お電話番号: ${phone}
-■ 当店ご利用歴: ${isFirstVisit ? '初めて' : '2回目以降'}
+■ 当店ご利用歴: ${isFirstVisit ? '初めて (入会金あり)' : '2回目以降'}
 ------------------
 ■ 予約日時: ${selectedDate} ${selectedTime}〜
-■ 指名キャスト: ${selectedCast.name} (${isNomination ? '指名あり' : '指名なし'})
+■ 指名キャスト: ${selectedCast.name} (${isNominationRepeat ? '指名2回目以降' : '指名初めて'})
 ■ 選択コース: ${selectedCourse.name}
 ------------------
 【概算お支払総額】
