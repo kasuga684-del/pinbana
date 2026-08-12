@@ -9,7 +9,6 @@
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    html { scroll-behavior: smooth; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-40">
@@ -251,8 +250,11 @@
       renderCastList();
       updateCalculation();
 
+      // ヘッダーの高さを考慮して、少し余裕を持たせた位置へスクロール（ヘッダーと被らない位置）
       setTimeout(() => {
-        courseSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const yOffset = -80; // ヘッダー分少し上に位置を調整
+        const y = courseSec.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
       }, 100);
     }
 
