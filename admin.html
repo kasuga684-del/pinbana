@@ -139,7 +139,7 @@
         <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
           <div>
             <h2 class="text-xl font-bold text-white">📅 月間出勤シフトカレンダー</h2>
-            <p class="text-xs text-slate-400 mt-1">キャストを選び、時間をセットして日付をクリックするだけで1か月分の出勤枠を即時入力できます</p>
+            <p class="text-xs text-slate-400 mt-1">日付をクリックすると、その日個別の出勤時間（30分単位）を設定・変更できます</p>
           </div>
           <button onclick="saveData('schedules')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
             💾 出勤シフトを更新
@@ -147,9 +147,7 @@
         </div>
 
         <!-- コントロールバー -->
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-wrap gap-6 items-center justify-between">
-          
-          <!-- 対象年月 ＆ キャスト選択 -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex items-center justify-between">
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
               <label class="text-xs text-slate-400 font-bold">年月:</label>
@@ -157,20 +155,13 @@
             </div>
 
             <div class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
-              <label class="text-xs text-slate-400 font-bold">キャスト:</label>
+              <label class="text-xs text-slate-400 font-bold">キャスト選択:</label>
               <select id="castSelect" onchange="renderCalendar()" class="bg-transparent text-white font-bold text-sm outline-none cursor-pointer"></select>
             </div>
           </div>
-
-          <!-- 一括適用時間設定 -->
-          <div class="flex items-center gap-3 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
-            <span class="text-pink-400 font-bold">セットする出勤時間:</span>
-            <input type="time" id="presetStart" value="12:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1 font-bold">
-            <span>〜</span>
-            <input type="time" id="presetEnd" value="20:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1 font-bold">
-            <span class="text-slate-500 text-[10px]">（日付をタップするとこの時間枠が〇で適用されます）</span>
+          <div class="text-xs text-slate-400 italic">
+            ※日付をクリックすると時間指定ポップアップが開きます
           </div>
-
         </div>
 
         <!-- 月間カレンダー -->
@@ -192,6 +183,39 @@
     </main>
   </div>
 
+  <!-- 時間指定モーダル (ポップアップ) -->
+  <div id="timeModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-96 space-y-6 shadow-2xl">
+      <div>
+        <h3 id="modalDateTitle" class="text-lg font-bold text-pink-400">出勤時間の個別設定</h3>
+        <p class="text-xs text-slate-400 mt-1">30分単位で開始・終了時間を設定してください</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">開始時間</label>
+          <select id="modalStartSelect" class="w-full bg-slate-950 text-white font-bold p-2.5 rounded-xl border border-slate-800 outline-none"></select>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">終了時間</label>
+          <select id="modalEndSelect" class="w-full bg-slate-950 text-white font-bold p-2.5 rounded-xl border border-slate-800 outline-none"></select>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2 pt-2">
+        <button onclick="applyShiftFromModal()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded-xl transition-all">
+          この時間で出勤登録 ➔
+        </button>
+        <button onclick="clearShiftFromModal()" class="w-full bg-rose-950/40 hover:bg-rose-900/50 text-rose-400 font-bold py-2.5 rounded-xl border border-rose-800/60 transition-all text-xs">
+          この日をお休みにする
+        </button>
+        <button onclick="closeModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl text-xs transition-all">
+          キャンセル
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const OWNER = 'kasuga684-del';
     const REPO = 'pinbana';
@@ -199,12 +223,42 @@
 
     let scheduleData = null;
     let fileSha = '';
+    let selectedModalDate = '';
 
     const today = new Date();
     const curYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     document.getElementById('monthPicker').value = curYearMonth;
 
     const CUP_LIST = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
+
+    // 30分単位の時刻リストを生成 (09:00 〜 29:00 まで対応)
+    function generateTimeOptions() {
+      const startSelect = document.getElementById('modalStartSelect');
+      const endSelect = document.getElementById('modalEndSelect');
+      startSelect.innerHTML = '';
+      endSelect.innerHTML = '';
+
+      for (let h = 9; h <= 28; h++) {
+        for (let m = 0; m < 60; m += 30) {
+          const hh = String(h % 24).padStart(2, '0');
+          const mm = String(m).padStart(2, '0');
+          const timeVal = `${hh}:${mm}`;
+          const displayVal = h >= 24 ? `翌${String(h - 24).padStart(2, '0')}:${mm}` : timeVal;
+
+          const opt1 = document.createElement('option');
+          opt1.value = timeVal;
+          opt1.innerText = displayVal;
+          startSelect.appendChild(opt1);
+
+          const opt2 = document.createElement('option');
+          opt2.value = timeVal;
+          opt2.innerText = displayVal;
+          endSelect.appendChild(opt2);
+        }
+      }
+      startSelect.value = '12:00';
+      endSelect.value = '20:00';
+    }
 
     function getToken() {
       let token = localStorage.getItem('github_pat');
@@ -259,6 +313,7 @@
         if (!scheduleData.courses) scheduleData.courses = [{ id: "c60", name: "60分コース", minutes: 60, priceNormal: 20000, priceRookie: 18000 }];
         if (!scheduleData.hotelFees) scheduleData.hotelFees = [{ minutes: 60, price: 3000 }];
 
+        generateTimeOptions();
         renderCasts();
         renderPricing();
         initCastSelect();
@@ -268,11 +323,10 @@
       }
     }
 
-    /* --- キャストドロップダウン初期化 --- */
     function initCastSelect() {
       const select = document.getElementById('castSelect');
       select.innerHTML = '';
-      scheduleData.casts.forEach((cast, i) => {
+      scheduleData.casts.forEach((cast) => {
         const opt = document.createElement('option');
         opt.value = cast.id;
         opt.innerText = `${cast.name} (${cast.isRookie ? '新人' : '通常'})`;
@@ -280,27 +334,25 @@
       });
     }
 
-    /* --- 月間カレンダー描画 ＆ タップ切り替え --- */
+    /* --- 月間カレンダー描画 --- */
     function renderCalendar() {
       const grid = document.getElementById('calendarGrid');
       grid.innerHTML = '';
 
       const castId = document.getElementById('castSelect').value;
-      const monthVal = document.getElementById('monthPicker').value; // YYYY-MM
+      const monthVal = document.getElementById('monthPicker').value;
       if (!castId || !monthVal) return;
 
       const [year, month] = monthVal.split('-').map(Number);
-      const firstDay = new Date(year, month - 1, 1).getDay(); // 曜日のオフセット
-      const totalDays = new Date(year, month, 0).getDate(); // 当月の総日数
+      const firstDay = new Date(year, month - 1, 1).getDay();
+      const totalDays = new Date(year, month, 0).getDate();
 
-      // 空白セル埋め
       for (let i = 0; i < firstDay; i++) {
         const blank = document.createElement('div');
         blank.className = 'bg-slate-950/40 min-h-[90px] rounded-xl border border-slate-900/50';
         grid.appendChild(blank);
       }
 
-      // 日付セル生成
       for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const daySchedules = scheduleData.schedules[dateStr] || {};
@@ -311,7 +363,7 @@
         let timeRangeText = isWorking ? `${timeKeys[0]} 〜 ${timeKeys[timeKeys.length - 1]}` : '休';
 
         const cell = document.createElement('div');
-        cell.onclick = () => toggleDayShift(dateStr, castId);
+        cell.onclick = () => openTimeModal(dateStr);
         cell.className = `p-2 min-h-[90px] rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
           isWorking ? 'bg-pink-950/30 border-pink-500/60 hover:bg-pink-900/40' : 'bg-slate-950 border-slate-800 hover:border-slate-700'
         }`;
@@ -331,35 +383,65 @@
       }
     }
 
-    // 日付タップ時にセットするロジック（ON/OFF）
-    function toggleDayShift(dateStr, castId) {
-      if (!scheduleData.schedules[dateStr]) scheduleData.schedules[dateStr] = {};
-      if (!scheduleData.schedules[dateStr][castId]) scheduleData.schedules[dateStr][castId] = {};
+    /* --- ポップアップ（モーダル）制御 --- */
+    function openTimeModal(dateStr) {
+      selectedModalDate = dateStr;
+      const castId = document.getElementById('castSelect').value;
+      const cast = scheduleData.casts.find(c => c.id === castId);
 
-      const currentSlots = scheduleData.schedules[dateStr][castId];
-      const hasShift = Object.keys(currentSlots).some(t => currentSlots[t] === 'ok');
+      document.getElementById('modalDateTitle').innerText = `${dateStr} の出勤設定 (${cast ? cast.name : ''})`;
 
-      if (hasShift) {
-        // すでに出勤がある場合は「休み（クリア）」にする
-        scheduleData.schedules[dateStr][castId] = {};
+      const daySlots = scheduleData.schedules[dateStr]?.[castId] || {};
+      const timeKeys = Object.keys(daySlots).filter(t => daySlots[t] === 'ok').sort();
+
+      if (timeKeys.length > 0) {
+        document.getElementById('modalStartSelect').value = timeKeys[0];
+        document.getElementById('modalEndSelect').value = timeKeys[timeKeys.length - 1];
       } else {
-        // 出勤が無い場合はプリセット時間帯で一括生成
-        const start = document.getElementById('presetStart').value;
-        const end = document.getElementById('presetEnd').value;
-        if (!start || !end) return;
-
-        let current = new Date(`2026-01-01T${start}:00`);
-        const endDate = new Date(`2026-01-01T${end}:00`);
-
-        const newSlots = {};
-        while (current < endDate) {
-          const timeStr = current.toTimeString().substring(0, 5);
-          newSlots[timeStr] = "ok";
-          current.setMinutes(current.getMinutes() + 30);
-        }
-        scheduleData.schedules[dateStr][castId] = newSlots;
+        document.getElementById('modalStartSelect').value = '12:00';
+        document.getElementById('modalEndSelect').value = '20:00';
       }
 
+      document.getElementById('timeModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('timeModal').classList.add('hidden');
+    }
+
+    function applyShiftFromModal() {
+      const castId = document.getElementById('castSelect').value;
+      const start = document.getElementById('modalStartSelect').value;
+      const end = document.getElementById('modalEndSelect').value;
+
+      if (!scheduleData.schedules[selectedModalDate]) scheduleData.schedules[selectedModalDate] = {};
+
+      let current = new Date(`2026-01-01T${start}:00`);
+      const endDate = new Date(`2026-01-01T${end}:00`);
+
+      if (current >= endDate) {
+        alert('終了時間は開始時間より後に設定してください。');
+        return;
+      }
+
+      const newSlots = {};
+      while (current <= endDate) {
+        const timeStr = current.toTimeString().substring(0, 5);
+        newSlots[timeStr] = "ok";
+        current.setMinutes(current.getMinutes() + 30);
+      }
+
+      scheduleData.schedules[selectedModalDate][castId] = newSlots;
+      closeModal();
+      renderCalendar();
+    }
+
+    function clearShiftFromModal() {
+      const castId = document.getElementById('castSelect').value;
+      if (scheduleData.schedules[selectedModalDate]?.[castId]) {
+        scheduleData.schedules[selectedModalDate][castId] = {};
+      }
+      closeModal();
       renderCalendar();
     }
 
@@ -472,7 +554,6 @@
       renderPricing();
     }
 
-    /* --- GitHubへの一括保存 --- */
     async function saveData(targetCategoryName) {
       const token = getToken();
       if (!token) return;
