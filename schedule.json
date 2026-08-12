@@ -1,0 +1,39 @@
+{
+  "updatedAt": "2026-08-12T12:00:00Z",
+  "casts": [
+    {
+      "id": "cast_01",
+      "name": "せん",
+      "age": 24,
+      "tag": "ご奉仕型",
+      "photo": "https://via.placeholder.com/150",
+      "nominationFee": 3000
+    },
+    {
+      "id": "cast_02",
+      "name": "あい",
+      "age": 19,
+      "tag": "新人 / 癒やし系",
+      "photo": "https://via.placeholder.com/150",
+      "nominationFee": 3000
+    }
+  ],
+  "schedules": {
+    "2026-08-12": {
+      "cast_01": {
+        "12:00": "ok",
+        "12:30": "ok",
+        "13:00": "ng",
+        "13:30": "ng",
+        "14:00": "ok",
+        "14:30": "ok"
+      },
+      "cast_02": {
+        "13:00": "ok",
+        "13:30": "ok",
+        "14:00": "ok",
+        "14:30": "ng"
+      }
+    }
+  }
+}
