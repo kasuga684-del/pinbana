@@ -9,51 +9,51 @@
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    html { scroll-behavior: smooth; } /* スムーススクロール対応 */
+    html { scroll-behavior: smooth; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-40">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-40">
 
-  <header class="sticky top-0 bg-slate-950/90 backdrop-blur border-b border-slate-800 p-4 text-center z-20">
-    <h1 class="text-lg font-black tracking-wider text-pink-500">WEB RESERVATION</h1>
+  <header class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-200 p-4 text-center z-20 shadow-sm">
+    <h1 class="text-lg font-black tracking-wider text-pink-600">WEB RESERVATION</h1>
   </header>
 
   <main class="max-w-md mx-auto p-4 space-y-6">
 
     <!-- STEP 1: 日にち選択 -->
     <section>
-      <label class="text-xs font-bold text-slate-400 mb-2 block">1. 📅 予約希望日を選択</label>
+      <label class="text-xs font-bold text-slate-500 mb-2 block">1. 📅 予約希望日を選択</label>
       <div id="dateContainer" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
     </section>
 
     <!-- STEP 2: キャスト ＆ 時間選択 -->
     <section class="space-y-4">
-      <h2 id="selectedDateTitle" class="text-xs font-bold border-l-4 border-pink-500 pl-2 text-pink-400">
+      <h2 id="selectedDateTitle" class="text-xs font-bold border-l-4 border-pink-500 pl-2 text-pink-600">
         2. 👤 キャスト ＆ ご案内時間を選択
       </h2>
       <div id="castListContainer" class="space-y-4">
-        <p class="text-xs text-slate-500 italic">データを読み込み中...</p>
+        <p class="text-xs text-slate-400 italic">データを読み込み中...</p>
       </div>
     </section>
 
     <!-- STEP 3: コース ＆ キャストとのお遊び（指名選択） -->
-    <section id="courseSection" class="space-y-4 hidden border-t border-slate-800 pt-4">
+    <section id="courseSection" class="space-y-4 hidden border-t border-slate-200 pt-5">
       <div class="flex justify-between items-center">
-        <label class="text-xs font-bold text-slate-400">3. ⏱ コース選択</label>
-        <span id="rookieBadge" class="text-[10px] bg-pink-950 text-pink-400 px-2 py-0.5 rounded border border-pink-800 font-bold hidden">🎉 新人割引適応中</span>
+        <label class="text-xs font-bold text-slate-500">3. ⏱ コース選択</label>
+        <span id="rookieBadge" class="text-[10px] bg-pink-50 text-pink-600 px-2 py-0.5 rounded border border-pink-200 font-bold hidden">🎉 新人割引適応中</span>
       </div>
 
       <!-- コース一覧 -->
       <div id="courseContainer" class="grid grid-cols-2 gap-2"></div>
 
       <!-- キャストとのお遊び（本指名選択） -->
-      <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
-        <label id="castPlayTitle" class="text-xs text-slate-300 font-bold block">〇〇とのお遊び</label>
+      <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <label id="castPlayTitle" class="text-xs text-slate-700 font-bold block">〇〇とのお遊び</label>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="setNomination(false)" id="nomFirstBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-pink-500 bg-pink-950/30 text-white">
+          <button type="button" onclick="setNomination(false)" id="nomFirstBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-pink-500 bg-pink-50 text-pink-600 shadow-sm">
             初めて
           </button>
-          <button type="button" onclick="setNomination(true)" id="nomRepeatBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-slate-800 bg-slate-950 text-slate-400">
+          <button type="button" onclick="setNomination(true)" id="nomRepeatBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-500">
             2回目以降
           </button>
         </div>
@@ -61,45 +61,45 @@
     </section>
 
     <!-- STEP 4: お客様情報入力 -->
-    <section id="userInfoSection" class="space-y-4 hidden border-t border-slate-800 pt-4">
-      <label class="text-xs font-bold text-slate-400 block">4. 📝 お客様情報の入力</label>
+    <section id="userInfoSection" class="space-y-4 hidden border-t border-slate-200 pt-5">
+      <label class="text-xs font-bold text-slate-500 block">4. 📝 お客様情報の入力</label>
       
       <!-- 当店のご利用歴 -->
-      <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
-        <label class="text-xs text-slate-300 font-bold block">当店のご利用歴</label>
+      <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <label class="text-xs text-slate-700 font-bold block">当店のご利用歴</label>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="setFirstVisit(true)" id="visitFirstBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-pink-500 bg-pink-950/30 text-white">
+          <button type="button" onclick="setFirstVisit(true)" id="visitFirstBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-pink-500 bg-pink-50 text-pink-600 shadow-sm">
             初めて
           </button>
-          <button type="button" onclick="setFirstVisit(false)" id="visitRepeatBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-slate-800 bg-slate-950 text-slate-400">
+          <button type="button" onclick="setFirstVisit(false)" id="visitRepeatBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-500">
             2回目以降
           </button>
         </div>
       </div>
 
       <!-- お名前 ＆ 電話番号 -->
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
         <div>
-          <label class="text-xs text-slate-400 block mb-1">お名前 (偽名でも可) <span class="text-pink-500">*</span></label>
-          <input type="text" id="custName" oninput="updateCalculation()" placeholder="例: かすが" class="w-full bg-slate-950 text-white p-2.5 rounded-lg border border-slate-800 text-sm outline-none focus:border-pink-500">
+          <label class="text-xs text-slate-500 block mb-1">お名前 (偽名でも可) <span class="text-pink-500">*</span></label>
+          <input type="text" id="custName" oninput="updateCalculation()" placeholder="例: かすが" class="w-full bg-slate-50 text-slate-800 p-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:bg-white focus:border-pink-500 transition-all">
         </div>
         <div>
-          <label class="text-xs text-slate-400 block mb-1">お電話番号 <span class="text-pink-500">*</span></label>
-          <input type="tel" id="custPhone" oninput="updateCalculation()" placeholder="例: 09012345678" class="w-full bg-slate-950 text-white p-2.5 rounded-lg border border-slate-800 text-sm outline-none focus:border-pink-500">
+          <label class="text-xs text-slate-500 block mb-1">お電話番号 <span class="text-pink-500">*</span></label>
+          <input type="tel" id="custPhone" oninput="updateCalculation()" placeholder="例: 09012345678" class="w-full bg-slate-50 text-slate-800 p-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:bg-white focus:border-pink-500 transition-all">
         </div>
       </div>
     </section>
 
     <!-- STEP 5: 概算料金計算 -->
-    <section id="priceBreakdownSection" class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs hidden">
-      <h3 class="font-bold text-slate-300 border-b border-slate-800 pb-2">🧾 お支払総額（概算内訳）</h3>
-      <div class="space-y-1.5 text-slate-400">
+    <section id="priceBreakdownSection" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2 text-xs hidden">
+      <h3 class="font-bold text-slate-700 border-b border-slate-100 pb-2">🧾 お支払総額（概算内訳）</h3>
+      <div class="space-y-1.5 text-slate-500">
         <div class="flex justify-between"><span>コース料金:</span><span id="pCourse">¥0</span></div>
         <div class="flex justify-between"><span>本指名料:</span><span id="pNomination">¥0</span></div>
         <div class="flex justify-between"><span>入会金:</span><span id="pAdmission">¥0</span></div>
         <div class="flex justify-between"><span>ホテル代 (概算):</span><span id="pHotel">¥0</span></div>
       </div>
-      <div class="border-t border-slate-800 pt-2 flex justify-between font-bold text-base text-pink-400">
+      <div class="border-t border-slate-100 pt-2 flex justify-between font-bold text-base text-pink-600">
         <span>概算合計金額:</span>
         <span id="pTotal">¥0</span>
       </div>
@@ -108,12 +108,12 @@
   </main>
 
   <!-- フッターバー -->
-  <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 border-t border-slate-800 p-4 backdrop-blur-md z-30 space-y-2">
+  <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 border-t border-slate-200 p-4 backdrop-blur-md z-30 space-y-2 shadow-lg">
     <div class="flex justify-between items-center text-xs">
       <span class="text-slate-400">選択状況:</span>
-      <span id="selectedInfoText" class="font-bold text-pink-400">未選択</span>
+      <span id="selectedInfoText" class="font-bold text-pink-600">未選択</span>
     </div>
-    <button id="nextBtn" disabled onclick="submitReservation()" class="w-full bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">
+    <button id="nextBtn" disabled onclick="submitReservation()" class="w-full bg-pink-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-3.5 rounded-xl shadow-md transition-all">
       予約フォームを送信 (LINEヘ) ➔
     </button>
   </div>
@@ -155,7 +155,7 @@
 
         const btn = document.createElement('button');
         btn.className = `flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-          selectedDate === dateStr ? 'bg-pink-600 text-white border-pink-400 shadow-lg' : 'bg-slate-900 text-slate-300 border-slate-800'
+          selectedDate === dateStr ? 'bg-pink-600 text-white border-pink-500 shadow-md' : 'bg-white text-slate-600 border-slate-200'
         }`;
         btn.innerText = displayStr;
         btn.onclick = () => {
@@ -196,11 +196,11 @@
         const timeKeys = Object.keys(slots);
 
         const card = document.createElement('div');
-        card.className = 'bg-slate-900 rounded-2xl p-4 border border-slate-800/80';
+        card.className = 'bg-white rounded-2xl p-4 border border-slate-200 shadow-sm';
 
         let slotsHtml = '';
         if (timeKeys.length === 0) {
-          slotsHtml = '<p class="text-xs text-slate-500 italic mt-2">※本日はお休みです</p>';
+          slotsHtml = '<p class="text-xs text-slate-400 italic mt-2">※本日はお休みです</p>';
         } else {
           slotsHtml = '<div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar mt-3">';
           timeKeys.forEach(time => {
@@ -210,7 +210,7 @@
 
             slotsHtml += `
               <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                isNG ? 'bg-slate-950 text-slate-600 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-400 scale-105 shadow-lg' : 'bg-slate-800 text-slate-200 border-slate-700'
+                isNG ? 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-500 scale-105 shadow-md' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
               }">
                 ${status === 'ok' ? '〇 ' : '× '} ${time}
               </button>
@@ -221,13 +221,13 @@
 
         card.innerHTML = `
           <div class="flex gap-3 items-center">
-            <img src="${cast.photo}" class="w-16 h-16 object-cover rounded-xl bg-slate-800" />
+            <img src="${cast.photo}" class="w-16 h-16 object-cover rounded-xl bg-slate-100 border border-slate-100" />
             <div>
               <div class="flex items-center gap-1.5">
-                <h3 class="font-bold text-base">${cast.name} <span class="text-xs text-slate-400">(${cast.age})</span></h3>
-                ${cast.isRookie ? '<span class="text-[9px] bg-pink-950 text-pink-400 px-1.5 py-0.5 rounded border border-pink-800 font-bold">新人</span>' : ''}
+                <h3 class="font-bold text-base text-slate-800">${cast.name} <span class="text-xs text-slate-400">(${cast.age})</span></h3>
+                ${cast.isRookie ? '<span class="text-[9px] bg-pink-50 text-pink-600 px-1.5 py-0.5 rounded border border-pink-200 font-bold">新人</span>' : ''}
               </div>
-              <p class="text-xs text-slate-400 mt-0.5">T${cast.height} / B${cast.bust}(${cast.cup}) / W${cast.waist} / H${cast.hip}</p>
+              <p class="text-xs text-slate-500 mt-0.5">T${cast.height} / B${cast.bust}(${cast.cup}) / W${cast.waist} / H${cast.hip}</p>
             </div>
           </div>
           ${slotsHtml}
@@ -251,7 +251,6 @@
       renderCastList();
       updateCalculation();
 
-      // ★時間コマタップ時に下（コース選択画面）へスムーズにスクロール
       setTimeout(() => {
         courseSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -276,11 +275,11 @@
         btn.type = 'button';
         btn.onclick = () => { selectedCourse = c; renderCourses(); updateCalculation(); };
         btn.className = `p-3 rounded-xl border text-left font-bold transition-all ${
-          isSelected ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-900 text-slate-300'
+          isSelected ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
         }`;
         btn.innerHTML = `
-          <div class="text-xs text-pink-400">${c.name} (${c.minutes}分)</div>
-          <div class="text-sm mt-0.5">¥${price.toLocaleString()}</div>
+          <div class="text-xs text-pink-600">${c.name} (${c.minutes}分)</div>
+          <div class="text-sm mt-0.5 font-bold">¥${price.toLocaleString()}</div>
         `;
         container.appendChild(btn);
       });
@@ -288,15 +287,15 @@
 
     function setNomination(isRepeat) {
       isNominationRepeat = isRepeat;
-      document.getElementById('nomFirstBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${!isRepeat ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
-      document.getElementById('nomRepeatBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${isRepeat ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
+      document.getElementById('nomFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500'}`;
+      document.getElementById('nomRepeatBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500'}`;
       updateCalculation();
     }
 
     function setFirstVisit(val) {
       isFirstVisit = val;
-      document.getElementById('visitFirstBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${val ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
-      document.getElementById('visitRepeatBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${!val ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
+      document.getElementById('visitFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${val ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500'}`;
+      document.getElementById('visitRepeatBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!val ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500'}`;
       updateCalculation();
     }
 
