@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店舗管理ページ - 予約枠設定</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen p-4 md:p-8">
+
+  <main class="max-w-2xl mx-auto space-y-6">
+    <!-- ヘッダー -->
+    <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+      <div>
+        <span class="text-xs text-pink-500 font-bold uppercase tracking-wider">Store Admin</span>
+        <h1 class="text-xl font-bold">予約枠・〇×コントロール</h1>
+      </div>
+      <button onclick="saveTokenPrompt()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700">
+        🔑 トークン再設定
+      </button>
+    </div>
+
+    <!-- 日付 ＆ リロード -->
+    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div class="w-full sm:w-auto">
+        <label class="text-xs text-slate-400 block mb-1">管理する日付を選択</label>
+        <input type="date" id="datePicker" onchange="loadSchedule()" class="bg-slate-950 text-white font-bold px-3 py-2 rounded-lg border border-slate-800 w-full">
+      </div>
+      <button onclick="loadSchedule()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-xs font-bold px-4 py-2.5 rounded-lg border border-slate-700">
+        🔄 データを再読み込み
+      </button>
+    </div>
+
+    <!-- キャスト別 30分コマ調整一覧 -->
+    <div id="adminCastContainer" class="space-y-4">
+      <p class="text-xs text-slate-500 italic">データを読み込み中...</p>
+    </div>
+
+    <!-- 一括保存ボタン -->
+    <div class="sticky bottom-4 bg-slate-950/90 p-4 rounded-2xl border border-slate-800 backdrop-blur-md flex justify-between items-center">
+      <span class="text-xs text-slate-400">変更後は必ず保存してください</span>
+      <button id="saveBtn" onclick="saveToGitHub()" class="bg-pink-600 hover:bg-pink-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all">
+        💾 GitHubへ保存（更新）
+      </button>
+    </div>
+  </main>
+
+  <script>
+    const OWNER = 'kasuga684-del';
+    const REPO = 'pinbana';
+    const FILE_PATH = 'schedule.json';
+
+    let scheduleData = null;
+    let fileSha = '';
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('datePicker').value = todayStr;
+
+    function getToken() {
+      let token = localStorage.getItem('github_pat');
+      if (!token) {
+        token = prompt('先ほど保存した GitHub トークン（ghp_...）を入力してください:');
+        if (token) {
+          localStorage.setItem('github_pat', token.trim());
+        }
+      }
+      return token;
+    }
+
+    function saveTokenPrompt() {
+      const token = prompt('新しい GitHub トークン（ghp_...）を入力してください:');
+      if (token) {
+        localStorage.setItem('github_pat', token.trim());
+        alert('トークンを保存しました！');
+        loadSchedule();
+      }
+    }
+
+    async function loadSchedule() {
+      const token = getToken();
+      if (!token) return;
+
+      const container = document.getElementById('adminCastContainer');
+      container.innerHTML = '<p class="text-xs text-slate-500 italic">読み込み中...</p>';
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`, {
+          headers: { 'Authorization': `token ${token}` },
+          cache: 'no-store'
+        });
+
+        if (!res.ok) throw new Error('取得失敗');
+
+        const json = await res.json();
+        fileSha = json.sha;
+
+        const content = decodeURIComponent(escape(atob(json.content)));
+        scheduleData = JSON.parse(content);
+
+        renderAdminList();
+      } catch (err) {
+        container.innerHTML = '<p class="text-xs text-red-400">データの取得に失敗しました。トークンを確認してください。</p>';
+      }
+    }
+
+    function renderAdminList() {
+      if (!scheduleData) return;
+      const targetDate = document.getElementById('datePicker').value;
+      const container = document.getElementById('adminCastContainer');
+      container.innerHTML = '';
+
+      if (!scheduleData.schedules[targetDate]) {
+        scheduleData.schedules[targetDate] = {};
+      }
+
+      const daySchedules = scheduleData.schedules[targetDate];
+
+      scheduleData.casts.forEach(cast => {
+        if (!daySchedules[cast.id]) {
+          daySchedules[cast.id] = {
+            "12:00": "ok", "12:30": "ok", "13:00": "ok", "13:30": "ok", "14:00": "ok", "14:30": "ok"
+          };
+        }
+
+        const slots = daySchedules[cast.id];
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900 rounded-2xl p-4 border border-slate-800';
+
+        let slotsHtml = '<div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">';
+        Object.keys(slots).forEach(time => {
+          const status = slots[time];
+          const isOK = status === 'ok';
+
+          slotsHtml += `
+            <button
+              onclick="toggleSlot('${cast.id}', '${time}')"
+              class="p-2.5 rounded-xl border flex flex-col items-center justify-center font-bold transition-all ${
+                isOK
+                  ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400'
+                  : 'bg-rose-950/40 border-rose-800 text-rose-400'
+              }"
+            >
+              <span class="text-[10px] text-slate-400 font-mono">${time}</span>
+              <span class="text-base">${isOK ? '〇' : '×'}</span>
+            </button>
+          `;
+        });
+        slotsHtml += '</div>';
+
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-base text-pink-400">${cast.name}</h3>
+            <span class="text-xs text-slate-500">タップで〇/×切り替え</span>
+          </div>
+          ${slotsHtml}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleSlot(castId, time) {
+      const targetDate = document.getElementById('datePicker').value;
+      const currentStatus = scheduleData.schedules[targetDate][castId][time];
+      scheduleData.schedules[targetDate][castId][time] = currentStatus === 'ok' ? 'ng' : 'ok';
+      renderAdminList();
+    }
+
+    async function saveToGitHub() {
+      const token = getToken();
+      if (!token) return;
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerText = '保存中...';
+
+      try {
+        const jsonString = JSON.stringify(scheduleData, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+        const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Update schedule from admin panel',
+            content: base64Content,
+            sha: fileSha
+          })
+        });
+
+        if (res.ok) {
+          const resData = await res.json();
+          fileSha = resData.content.sha;
+          alert('枠の変更を保存しました！');
+        } else {
+          alert('保存に失敗しました。');
+        }
+      } catch (err) {
+        alert('通信エラーが発生しました。');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = '💾 GitHubへ保存（更新）';
+      }
+    }
+
+    loadSchedule();
+  </script>
+</body>
+</html>
