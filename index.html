@@ -35,25 +35,25 @@
       </div>
     </section>
 
-    <!-- STEP 3: コース ＆ 本指名選択 -->
+    <!-- STEP 3: コース ＆ キャストとのお遊び（指名選択） -->
     <section id="courseSection" class="space-y-4 hidden border-t border-slate-800 pt-4">
       <div class="flex justify-between items-center">
-        <label class="text-xs font-bold text-slate-400">3. ⏱ コース ＆ 本指名選択</label>
+        <label class="text-xs font-bold text-slate-400">3. ⏱ コース選択</label>
         <span id="rookieBadge" class="text-[10px] bg-pink-950 text-pink-400 px-2 py-0.5 rounded border border-pink-800 font-bold hidden">🎉 新人割引適応中</span>
       </div>
 
       <!-- コース一覧 -->
       <div id="courseContainer" class="grid grid-cols-2 gap-2"></div>
 
-      <!-- 本指名選択 -->
+      <!-- キャストとのお遊び（本指名選択） -->
       <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
-        <label class="text-xs text-slate-300 font-bold block">本指名の選択</label>
+        <label id="castPlayTitle" class="text-xs text-slate-300 font-bold block">〇〇とのお遊び</label>
         <div class="grid grid-cols-2 gap-2">
           <button type="button" onclick="setNomination(true)" id="nomTrueBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-pink-500 bg-pink-950/30 text-white">
-            本指名する (+¥1,000)
+            初めて
           </button>
           <button type="button" onclick="setNomination(false)" id="nomFalseBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-slate-800 bg-slate-950 text-slate-400">
-            フリー (指名なし)
+            2回目以降
           </button>
         </div>
       </div>
@@ -63,15 +63,15 @@
     <section id="userInfoSection" class="space-y-4 hidden border-t border-slate-800 pt-4">
       <label class="text-xs font-bold text-slate-400 block">4. 📝 お客様情報の入力</label>
       
-      <!-- 当店のご利用有無 -->
+      <!-- 当店のご利用歴 -->
       <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
         <label class="text-xs text-slate-300 font-bold block">当店のご利用歴</label>
         <div class="grid grid-cols-2 gap-2">
           <button type="button" onclick="setFirstVisit(true)" id="visitFirstBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-pink-500 bg-pink-950/30 text-white">
-            初めて (+入会金¥1,000)
+            初めて
           </button>
           <button type="button" onclick="setFirstVisit(false)" id="visitRepeatBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-slate-800 bg-slate-950 text-slate-400">
-            2回目以降 (¥0)
+            2回目以降
           </button>
         </div>
       </div>
@@ -96,7 +96,7 @@
         <div class="flex justify-between"><span>コース料金:</span><span id="pCourse">¥0</span></div>
         <div class="flex justify-between"><span>本指名料:</span><span id="pNomination">¥0</span></div>
         <div class="flex justify-between"><span>入会金:</span><span id="pAdmission">¥0</span></div>
-        <div class="flex justify-between"><span>ホテル代 (可変/概算):</span><span id="pHotel">¥0</span></div>
+        <div class="flex justify-between"><span>ホテル代 (概算):</span><span id="pHotel">¥0</span></div>
       </div>
       <div class="border-t border-slate-800 pt-2 flex justify-between font-bold text-base text-pink-400">
         <span>概算合計金額:</span>
@@ -125,8 +125,8 @@
     let selectedCast = null;
     let selectedTime = '';
     let selectedCourse = null;
-    let isNomination = true; // デフォルト: 本指名あり
-    let isFirstVisit = true; // デフォルト: 初めて
+    let isNomination = true;
+    let isFirstVisit = true;
 
     const today = new Date();
 
@@ -240,6 +240,9 @@
       selectedTime = time;
       selectedCourse = null;
 
+      // ラベル名を「選択したキャスト名 + とのお遊び」に変更
+      document.getElementById('castPlayTitle').innerText = `${selectedCast.name}とのお遊び`;
+
       document.getElementById('courseSection').classList.remove('hidden');
       document.getElementById('userInfoSection').classList.remove('hidden');
 
@@ -301,8 +304,8 @@
       document.getElementById('priceBreakdownSection').classList.remove('hidden');
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = isNomination ? 1000 : 0;
-      const admissionFee = isFirstVisit ? 1000 : 0;
+      const nominationFee = isNomination ? (scheduleData.pricing.nominationFee || 1000) : 0;
+      const admissionFee = isFirstVisit ? (scheduleData.pricing.admissionFee || 1000) : 0;
       
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
@@ -345,8 +348,8 @@
       const phone = document.getElementById('custPhone').value.trim();
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = isNomination ? 1000 : 0;
-      const admissionFee = isFirstVisit ? 1000 : 0;
+      const nominationFee = isNomination ? (scheduleData.pricing.nominationFee || 1000) : 0;
+      const admissionFee = isFirstVisit ? (scheduleData.pricing.admissionFee || 1000) : 0;
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
       const total = coursePrice + nominationFee + admissionFee + hotelPrice;
@@ -356,10 +359,10 @@
 ------------------
 ■ お客様名: ${name} 様
 ■ お電話番号: ${phone}
-■ 当店ご利用歴: ${isFirstVisit ? '初めて (入会金あり)' : '2回目以降'}
+■ 当店ご利用歴: ${isFirstVisit ? '初めて' : '2回目以降'}
 ------------------
 ■ 予約日時: ${selectedDate} ${selectedTime}〜
-■ 指名キャスト: ${selectedCast.name} ${isNomination ? '(本指名)' : '(フリー)'}
+■ 指名キャスト: ${selectedCast.name} (${isNomination ? '指名あり' : '指名なし'})
 ■ 選択コース: ${selectedCourse.name}
 ------------------
 【概算お支払総額】
