@@ -3,58 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>店舗統合管理ページ</title>
+  <title>店舗統合管理ダッシュボード (PC専用)</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen p-4 md:p-8">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
 
-  <main class="max-w-3xl mx-auto space-y-8">
-    
-    <!-- ヘッダー -->
-    <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-      <div>
-        <span class="text-xs text-pink-500 font-bold uppercase tracking-wider">Store Admin</span>
-        <h1 class="text-xl font-bold">店舗設定 ＆ 予約枠コントロール</h1>
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- サイドバー (ナビゲーション) -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-6">
+      <div class="space-y-8">
+        <div>
+          <span class="text-xs font-black text-pink-500 tracking-widest uppercase block">Store System</span>
+          <h1 class="text-lg font-extrabold text-white">店舗管理パネル</h1>
+        </div>
+
+        <!-- タブ切替メニュー -->
+        <nav class="space-y-2">
+          <button onclick="switchTab('casts')" id="tabBtn-casts" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-pink-600 text-white transition-all">
+            👤 キャスト情報管理
+          </button>
+          <button onclick="switchTab('courses')" id="tabBtn-courses" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+            💰 料金・コース設定
+          </button>
+          <button onclick="switchTab('schedules')" id="tabBtn-schedules" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+            📅 出勤・予約枠コントロール
+          </button>
+        </nav>
       </div>
-      <button onclick="saveTokenPrompt()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700">
-        🔑 トークン設定
-      </button>
-    </div>
 
-    <!-- 1. 日付選択 -->
-    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center">
-      <div class="w-full sm:w-auto">
-        <label class="text-xs text-slate-400 block mb-1">📅 管理対象の日付</label>
-        <input type="date" id="datePicker" onchange="loadSchedule()" class="bg-slate-950 text-white font-bold px-3 py-2 rounded-lg border border-slate-800 w-full">
-      </div>
-      <button onclick="loadSchedule()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-xs font-bold px-4 py-2.5 rounded-lg border border-slate-700">
-        🔄 データを再読み込み
-      </button>
-    </div>
-
-    <!-- 2. キャスト管理・出勤枠管理 -->
-    <section class="space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-base font-bold text-pink-400 border-l-4 border-pink-500 pl-2">キャスト ＆ 出勤〇×設定</h2>
-        <button onclick="addNewCast()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white font-bold px-3 py-2 rounded-lg">
-          ＋ 新規キャスト追加
+      <div class="pt-4 border-t border-slate-800">
+        <button onclick="saveTokenPrompt()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2.5 rounded-lg border border-slate-700 font-bold transition-all">
+          🔑 GitHubトークン再設定
         </button>
       </div>
+    </aside>
 
-      <div id="adminCastContainer" class="space-y-6">
-        <p class="text-xs text-slate-500 italic">データを読み込み中...</p>
-      </div>
-    </section>
+    <!-- メインコンテンツ領域 -->
+    <main class="flex-1 overflow-y-auto p-8 space-y-6">
 
-    <!-- 3. 一括保存ボタン -->
-    <div class="sticky bottom-4 bg-slate-950/90 p-4 rounded-2xl border border-slate-800 backdrop-blur-md flex justify-between items-center z-30">
-      <span class="text-xs text-slate-400">変更後は必ず保存してください</span>
-      <button id="saveBtn" onclick="saveToGitHub()" class="bg-pink-600 hover:bg-pink-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all">
-        💾 GitHubへ保存（更新）
-      </button>
-    </div>
+      <!-- ================= 項目 1: キャスト情報管理 ================= -->
+      <section id="section-casts" class="tab-content space-y-6">
+        <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
+          <div>
+            <h2 class="text-xl font-bold text-white">👤 キャスト情報</h2>
+            <p class="text-xs text-slate-400 mt-1">店舗に所属するキャストのプロフィール・写真・指名料を管理します</p>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="addNewCast()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700">
+              ＋ 新規キャスト追加
+            </button>
+            <button onclick="saveData('casts')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
+              💾 キャスト情報を更新
+            </button>
+          </div>
+        </div>
 
-  </main>
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-950 text-slate-400 text-xs border-b border-slate-800">
+                <th class="p-4">写真</th>
+                <th class="p-4">名前</th>
+                <th class="p-4">年齢</th>
+                <th class="p-4">キャッチコピー / タグ</th>
+                <th class="p-4">本指名料 (円)</th>
+                <th class="p-4">画像URL</th>
+                <th class="p-4 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="castTableBody" class="divide-y divide-slate-800/60 text-sm">
+              <!-- JSでテーブル行を生成 -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+
+      <!-- ================= 項目 2: 料金・コース設定 ================= -->
+      <section id="section-courses" class="tab-content space-y-6 hidden">
+        <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
+          <div>
+            <h2 class="text-xl font-bold text-white">💰 料金・コース設定</h2>
+            <p class="text-xs text-slate-400 mt-1">予約フォームで選択できるコース時間と料金を設定します</p>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="addNewCourse()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700">
+              ＋ コース追加
+            </button>
+            <button onclick="saveData('courses')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
+              💾 料金設定を更新
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-950 text-slate-400 text-xs border-b border-slate-800">
+                <th class="p-4">コース名</th>
+                <th class="p-4">時間 (分)</th>
+                <th class="p-4">料金 (円)</th>
+                <th class="p-4 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="courseTableBody" class="divide-y divide-slate-800/60 text-sm">
+              <!-- JSでテーブル行を生成 -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+
+      <!-- ================= 項目 3: 出勤・予約枠コントロール ================= -->
+      <section id="section-schedules" class="tab-content space-y-6 hidden">
+        <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
+          <div>
+            <h2 class="text-xl font-bold text-white">📅 出勤・予約枠コントロール</h2>
+            <p class="text-xs text-slate-400 mt-1">指定日のキャスト別出勤時間・30分刻みの〇/×枠を管理します</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+              <label class="text-xs text-slate-400 font-bold">日付:</label>
+              <input type="date" id="datePicker" onchange="renderSchedules()" class="bg-transparent text-white font-bold text-sm outline-none">
+            </div>
+            <button onclick="saveData('schedules')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
+              💾 出勤情報を更新
+            </button>
+          </div>
+        </div>
+
+        <div id="scheduleContainer" class="space-y-6">
+          <!-- JSでキャストごとの出勤・〇×コマを一覧生成 -->
+        </div>
+      </section>
+
+    </main>
+  </div>
 
   <script>
     const OWNER = 'kasuga684-del';
@@ -81,16 +166,28 @@
       if (token) {
         localStorage.setItem('github_pat', token.trim());
         alert('トークンを保存しました！');
-        loadSchedule();
+        loadData();
       }
     }
 
-    async function loadSchedule() {
+    // タブ切替処理
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('bg-pink-600', 'text-white');
+        el.classList.add('bg-slate-800', 'text-slate-400');
+      });
+
+      document.getElementById(`section-${tabName}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tabBtn-${tabName}`);
+      activeBtn.classList.add('bg-pink-600', 'text-white');
+      activeBtn.classList.remove('bg-slate-800', 'text-slate-400');
+    }
+
+    // GitHubから全データ読み込み
+    async function loadData() {
       const token = getToken();
       if (!token) return;
-
-      const container = document.getElementById('adminCastContainer');
-      container.innerHTML = '<p class="text-xs text-slate-500 italic">読み込み中...</p>';
 
       try {
         const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`, {
@@ -106,105 +203,41 @@
         const content = decodeURIComponent(escape(atob(json.content)));
         scheduleData = JSON.parse(content);
 
-        renderAdminList();
+        // 初期データの補填
+        if (!scheduleData.courses) {
+          scheduleData.courses = [
+            { id: "c60", name: "60分コース", minutes: 60, price: 20000 },
+            { id: "c90", name: "90分コース", minutes: 90, price: 28000 }
+          ];
+        }
+
+        renderCasts();
+        renderCourses();
+        renderSchedules();
       } catch (err) {
-        container.innerHTML = '<p class="text-xs text-red-400">データの取得に失敗しました。トークンを確認してください。</p>';
+        alert('データの取得に失敗しました。トークンを確認してください。');
       }
     }
 
-    function renderAdminList() {
-      if (!scheduleData) return;
-      const targetDate = document.getElementById('datePicker').value;
-      const container = document.getElementById('adminCastContainer');
-      container.innerHTML = '';
-
-      if (!scheduleData.schedules[targetDate]) {
-        scheduleData.schedules[targetDate] = {};
-      }
-
-      const daySchedules = scheduleData.schedules[targetDate];
+    /* --- 1. キャスト情報描画 --- */
+    function renderCasts() {
+      const tbody = document.getElementById('castTableBody');
+      tbody.innerHTML = '';
 
       scheduleData.casts.forEach((cast, idx) => {
-        if (!daySchedules[cast.id]) {
-          daySchedules[cast.id] = {};
-        }
-
-        const slots = daySchedules[cast.id];
-        const card = document.createElement('div');
-        card.className = 'bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4';
-
-        // キャスト情報編集フォーム
-        let infoHtml = `
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 border-b border-slate-800">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">名前</label>
-              <input type="text" value="${cast.name}" onchange="updateCastInfo(${idx}, 'name', this.value)" class="bg-slate-950 text-xs text-white p-2 rounded border border-slate-800 w-full">
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">年齢</label>
-              <input type="number" value="${cast.age}" onchange="updateCastInfo(${idx}, 'age', Number(this.value))" class="bg-slate-950 text-xs text-white p-2 rounded border border-slate-800 w-full">
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">タグ/キャッチコピー</label>
-              <input type="text" value="${cast.tag}" onchange="updateCastInfo(${idx}, 'tag', this.value)" class="bg-slate-950 text-xs text-white p-2 rounded border border-slate-800 w-full">
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">本指名料 (円)</label>
-              <input type="number" value="${cast.nominationFee}" onchange="updateCastInfo(${idx}, 'nominationFee', Number(this.value))" class="bg-slate-950 text-xs text-white p-2 rounded border border-slate-800 w-full">
-            </div>
-            <div class="sm:col-span-2">
-              <label class="text-[10px] text-slate-400 block mb-1">写真画像URL</label>
-              <input type="text" value="${cast.photo}" onchange="updateCastInfo(${idx}, 'photo', this.value)" class="bg-slate-950 text-xs text-white p-2 rounded border border-slate-800 w-full">
-            </div>
-          </div>
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-all';
+        tr.innerHTML = `
+          <td class="p-4"><img src="${cast.photo}" class="w-10 h-10 object-cover rounded-lg bg-slate-800 border border-slate-700"></td>
+          <td class="p-4"><input type="text" value="${cast.name}" onchange="scheduleData.casts[${idx}].name = this.value" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-32"></td>
+          <td class="p-4"><input type="number" value="${cast.age}" onchange="scheduleData.casts[${idx}].age = Number(this.value)" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-16"></td>
+          <td class="p-4"><input type="text" value="${cast.tag}" onchange="scheduleData.casts[${idx}].tag = this.value" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-48"></td>
+          <td class="p-4"><input type="number" value="${cast.nominationFee}" onchange="scheduleData.casts[${idx}].nominationFee = Number(this.value)" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-28"></td>
+          <td class="p-4"><input type="text" value="${cast.photo}" onchange="scheduleData.casts[${idx}].photo = this.value" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-64 text-xs"></td>
+          <td class="p-4 text-right"><button onclick="deleteCast(${idx})" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-3 py-1 bg-rose-950/40 border border-rose-800 rounded-lg">削除</button></td>
         `;
-
-        // 出勤時間の自動セット
-        let shiftGenHtml = `
-          <div class="flex items-center gap-2 text-xs bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <span class="text-slate-400 font-bold">出勤時間自動生成:</span>
-            <input type="time" id="start_${cast.id}" value="12:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1">
-            <span>〜</span>
-            <input type="time" id="end_${cast.id}" value="20:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1">
-            <button onclick="generateShift('${cast.id}')" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded text-xs font-bold border border-slate-700">枠反映</button>
-          </div>
-        `;
-
-        // 30分枠コマ一覧
-        let slotsHtml = '<div class="grid grid-cols-3 sm:grid-cols-6 gap-2">';
-        const timeKeys = Object.keys(slots).sort();
-        
-        if (timeKeys.length === 0) {
-          slotsHtml += '<p class="col-span-full text-xs text-slate-500 italic">※出勤枠が設定されていません</p>';
-        } else {
-          timeKeys.forEach(time => {
-            const status = slots[time];
-            const isOK = status === 'ok';
-
-            slotsHtml += `
-              <button
-                onclick="toggleSlot('${cast.id}', '${time}')"
-                class="p-2 rounded-xl border flex flex-col items-center justify-center font-bold transition-all ${
-                  isOK
-                    ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400'
-                    : 'bg-rose-950/40 border-rose-800 text-rose-400'
-                }"
-              >
-                <span class="text-[10px] text-slate-400 font-mono">${time}</span>
-                <span class="text-sm">${isOK ? '〇' : '×'}</span>
-              </button>
-            `;
-          });
-        }
-        slotsHtml += '</div>';
-
-        card.innerHTML = infoHtml + shiftGenHtml + slotsHtml;
-        container.appendChild(card);
+        tbody.appendChild(tr);
       });
-    }
-
-    function updateCastInfo(index, field, value) {
-      scheduleData.casts[index][field] = value;
     }
 
     function addNewCast() {
@@ -217,7 +250,115 @@
         photo: 'https://via.placeholder.com/150',
         nominationFee: 3000
       });
-      renderAdminList();
+      renderCasts();
+    }
+
+    function deleteCast(idx) {
+      if (confirm('このキャストを削除してもよろしいですか？')) {
+        scheduleData.casts.splice(idx, 1);
+        renderCasts();
+      }
+    }
+
+    /* --- 2. 料金・コース描画 --- */
+    function renderCourses() {
+      const tbody = document.getElementById('courseTableBody');
+      tbody.innerHTML = '';
+
+      scheduleData.courses.forEach((course, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-all';
+        tr.innerHTML = `
+          <td class="p-4"><input type="text" value="${course.name}" onchange="scheduleData.courses[${idx}].name = this.value" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-48"></td>
+          <td class="p-4"><input type="number" value="${course.minutes}" onchange="scheduleData.courses[${idx}].minutes = Number(this.value)" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-24"></td>
+          <td class="p-4"><input type="number" value="${course.price}" onchange="scheduleData.courses[${idx}].price = Number(this.value)" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg border border-slate-800 w-32"></td>
+          <td class="p-4 text-right"><button onclick="deleteCourse(${idx})" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-3 py-1 bg-rose-950/40 border border-rose-800 rounded-lg">削除</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function addNewCourse() {
+      scheduleData.courses.push({
+        id: 'c_' + Date.now(),
+        name: '新コース',
+        minutes: 60,
+        price: 20000
+      });
+      renderCourses();
+    }
+
+    function deleteCourse(idx) {
+      if (confirm('このコースを削除しますか？')) {
+        scheduleData.courses.splice(idx, 1);
+        renderCourses();
+      }
+    }
+
+    /* --- 3. 出勤・〇×コマ描画 --- */
+    function renderSchedules() {
+      const container = document.getElementById('scheduleContainer');
+      container.innerHTML = '';
+
+      const targetDate = document.getElementById('datePicker').value;
+      if (!scheduleData.schedules[targetDate]) {
+        scheduleData.schedules[targetDate] = {};
+      }
+
+      const daySchedules = scheduleData.schedules[targetDate];
+
+      scheduleData.casts.forEach(cast => {
+        if (!daySchedules[cast.id]) daySchedules[cast.id] = {};
+        const slots = daySchedules[cast.id];
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900 rounded-2xl p-6 border border-slate-800 space-y-4';
+
+        let slotsHtml = '<div class="grid grid-cols-6 sm:grid-cols-12 gap-2 mt-2">';
+        const timeKeys = Object.keys(slots).sort();
+
+        if (timeKeys.length === 0) {
+          slotsHtml += '<p class="col-span-full text-xs text-slate-500 italic">※出勤時間が設定されていません</p>';
+        } else {
+          timeKeys.forEach(time => {
+            const status = slots[time];
+            const isOK = status === 'ok';
+
+            slotsHtml += `
+              <button
+                onclick="toggleSlot('${cast.id}', '${time}')"
+                class="p-2 rounded-xl border flex flex-col items-center justify-center font-bold transition-all ${
+                  isOK
+                    ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400 hover:bg-emerald-900/50'
+                    : 'bg-rose-950/40 border-rose-800 text-rose-400 hover:bg-rose-900/50'
+                }"
+              >
+                <span class="text-[10px] text-slate-400 font-mono">${time}</span>
+                <span class="text-sm">${isOK ? '〇' : '×'}</span>
+              </button>
+            `;
+          });
+        }
+        slotsHtml += '</div>';
+
+        card.innerHTML = `
+          <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+              <img src="${cast.photo}" class="w-8 h-8 object-cover rounded-lg bg-slate-800">
+              <h3 class="font-bold text-white">${cast.name}</h3>
+            </div>
+            <div class="flex items-center gap-2 text-xs bg-slate-950 p-2 rounded-xl border border-slate-800">
+              <span class="text-slate-400 font-bold">出勤範囲:</span>
+              <input type="time" id="start_${cast.id}" value="12:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1">
+              <span>〜</span>
+              <input type="time" id="end_${cast.id}" value="20:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1">
+              <button onclick="generateShift('${cast.id}')" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded text-xs font-bold border border-slate-700">コマ一括生成</button>
+            </div>
+          </div>
+          ${slotsHtml}
+        `;
+        container.appendChild(card);
+      });
     }
 
     function generateShift(castId) {
@@ -238,23 +379,20 @@
       }
 
       scheduleData.schedules[targetDate][castId] = newSlots;
-      renderAdminList();
+      renderSchedules();
     }
 
     function toggleSlot(castId, time) {
       const targetDate = document.getElementById('datePicker').value;
       const currentStatus = scheduleData.schedules[targetDate][castId][time];
       scheduleData.schedules[targetDate][castId][time] = currentStatus === 'ok' ? 'ng' : 'ok';
-      renderAdminList();
+      renderSchedules();
     }
 
-    async function saveToGitHub() {
+    /* --- GitHubへの一括保存 (各ボタン共通) --- */
+    async function saveData(targetCategoryName) {
       const token = getToken();
       if (!token) return;
-
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true;
-      saveBtn.innerText = '保存中...';
 
       try {
         const jsonString = JSON.stringify(scheduleData, null, 2);
@@ -267,7 +405,7 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            message: 'Update cast and schedule info',
+            message: `Update ${targetCategoryName} from admin dashboard`,
             content: base64Content,
             sha: fileSha
           })
@@ -276,19 +414,16 @@
         if (res.ok) {
           const resData = await res.json();
           fileSha = resData.content.sha;
-          alert('設定を保存しました！');
+          alert('更新が完了しました！');
         } else {
           alert('保存に失敗しました。');
         }
       } catch (err) {
         alert('通信エラーが発生しました。');
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.innerText = '💾 GitHubへ保存（更新）';
       }
     }
 
-    loadSchedule();
+    loadData();
   </script>
 </body>
 </html>
