@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WEB予約フォーム</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- LIFF SDK -->
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-28">
+
+  <header class="sticky top-0 bg-slate-950/90 backdrop-blur border-b border-slate-800 p-4 text-center z-20">
+    <h1 class="text-lg font-black tracking-wider text-pink-500">WEB RESERVATION</h1>
+  </header>
+
+  <main class="max-w-md mx-auto p-4 space-y-6">
+
+    <!-- 1. 日付選択 -->
+    <section>
+      <label class="text-xs font-bold text-slate-400 mb-2 block">📅 予約希望日（1ヶ月先まで選択可能）</label>
+      <div id="dateContainer" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
+    </section>
+
+    <!-- 2. 出勤キャスト ＆ 30分枠選択 -->
+    <section class="space-y-4">
+      <h2 id="selectedDateTitle" class="text-sm font-bold border-l-4 border-pink-500 pl-2 text-pink-400">
+        出勤・空き状況
+      </h2>
+      <div id="castListContainer" class="space-y-4">
+        <p class="text-xs text-slate-500 italic">データを読み込み中...</p>
+      </div>
+    </section>
+
+    <!-- 3. コース選択 -->
+    <section id="courseSection" class="space-y-2 hidden">
+      <label class="text-xs font-bold text-slate-400 block">⏱ コースを選択</label>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="selectCourse(60, 20000)" id="c60" class="p-3 rounded-xl border border-slate-800 bg-slate-900 text-left font-bold hover:border-pink-500">
+          <div class="text-xs text-pink-400">60分コース</div>
+          <div class="text-sm">¥20,000</div>
+        </button>
+        <button onclick="selectCourse(90, 28000)" id="c90" class="p-3 rounded-xl border border-slate-800 bg-slate-900 text-left font-bold hover:border-pink-500">
+          <div class="text-xs text-pink-400">90分コース</div>
+          <div class="text-sm">¥28,000</div>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- フッター固定 -->
+  <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 border-t border-slate-800 p-4 backdrop-blur-md z-30">
+    <div class="flex justify-between items-center mb-2 text-xs">
+      <span class="text-slate-400">選択状況:</span>
+      <span id="selectedInfoText" class="font-bold text-pink-400">未選択</span>
+    </div>
+    <button id="nextBtn" disabled onclick="submitReservation()" class="w-full bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">
+      予約内容をLINEへ送信 ➔
+    </button>
+  </div>
+
+  <script>
+    // ★ご自身の LIFF ID を設定してください
+    const LIFF_ID = 'YOUR_LIFF_ID';
+
+    let scheduleData = null;
+    let selectedDate = '';
+    let selectedCast = null;
+    let selectedTime = '';
+    let selectedCourseMinutes = 0;
+
+    const today = new Date();
+
+    // LIFFの初期化
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+      } catch (err) {
+        console.error('LIFF Error:', err);
+      }
+    }
+
+    function initDateTabs() {
+      const container = document.getElementById('dateContainer');
+      container.innerHTML = '';
+
+      for (let i = 0; i < 30; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
+        const dayName = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+        const displayStr = `${d.getMonth() + 1}/${d.getDate()}(${dayName})`;
+
+        if (i === 0) selectedDate = dateStr;
+
+        const btn = document.createElement('button');
+        btn.className = `flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+          selectedDate === dateStr
+            ? 'bg-pink-600 text-white border-pink-400 shadow-lg'
+            : 'bg-slate-900 text-slate-300 border-slate-800'
+        }`;
+        btn.innerText = displayStr;
+        btn.onclick = () => {
+          selectedDate = dateStr;
+          selectedCast = null;
+          selectedTime = '';
+          selectedCourseMinutes = 0;
+          document.getElementById('courseSection').classList.add('hidden');
+          initDateTabs();
+          renderCastList();
+          updateFooter();
+        };
+        container.appendChild(btn);
+      }
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch('./schedule.json?t=' + Date.now());
+        scheduleData = await res.json();
+        renderCastList();
+      } catch (err) {
+        document.getElementById('castListContainer').innerHTML = '<p class="text-xs text-red-400">データの読み込みに失敗しました</p>';
+      }
+    }
+
+    function renderCastList() {
+      if (!scheduleData) return;
+      document.getElementById('selectedDateTitle').innerText = `${selectedDate} の出勤・空き状況`;
+
+      const container = document.getElementById('castListContainer');
+      container.innerHTML = '';
+
+      const daySchedules = scheduleData.schedules[selectedDate] || {};
+
+      scheduleData.casts.forEach(cast => {
+        const slots = daySchedules[cast.id] || {};
+        const timeKeys = Object.keys(slots);
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900 rounded-2xl p-4 border border-slate-800/80';
+
+        let slotsHtml = '';
+        if (timeKeys.length === 0) {
+          slotsHtml = '<p class="text-xs text-slate-500 italic mt-2">※本日お休み、または準備中です</p>';
+        } else {
+          slotsHtml = '<div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar mt-3">';
+          timeKeys.forEach(time => {
+            const status = slots[time];
+            const isSelected = selectedCast?.id === cast.id && selectedTime === time;
+            const isNG = status === 'ng';
+
+            slotsHtml += `
+              <button
+                ${isNG ? 'disabled' : ''}
+                onclick="selectSlot('${cast.id}', '${time}')"
+                class="flex-none px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  isNG
+                    ? 'bg-slate-950 text-slate-600 border-transparent cursor-not-allowed'
+                    : isSelected
+                    ? 'bg-pink-600 text-white border-pink-400 scale-105 shadow-lg'
+                    : 'bg-slate-800 text-slate-200 border-slate-700'
+                }"
+              >
+                ${status === 'ok' ? '〇 ' : '× '}
+                ${time}
+              </button>
+            `;
+          });
+          slotsHtml += '</div>';
+        }
+
+        card.innerHTML = `
+          <div class="flex gap-3 items-center">
+            <img src="${cast.photo}" class="w-16 h-16 object-cover rounded-xl bg-slate-800" />
+            <div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-pink-950 text-pink-400 border border-pink-800/50">${cast.tag}</span>
+              <h3 class="font-bold text-base mt-1">${cast.name} <span class="text-xs text-slate-400">(${cast.age})</span></h3>
+              <p class="text-xs text-slate-400">指名料: ¥${cast.nominationFee.toLocaleString()}</p>
+            </div>
+          </div>
+          ${slotsHtml}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function selectSlot(castId, time) {
+      selectedCast = scheduleData.casts.find(c => c.id === castId);
+      selectedTime = time;
+      document.getElementById('courseSection').classList.remove('hidden');
+      renderCastList();
+      updateFooter();
+    }
+
+    function selectCourse(min, price) {
+      selectedCourseMinutes = min;
+      document.getElementById('c60').classList.toggle('border-pink-500', min === 60);
+      document.getElementById('c90').classList.toggle('border-pink-500', min === 90);
+      updateFooter();
+    }
+
+    function updateFooter() {
+      const btn = document.getElementById('nextBtn');
+      const text = document.getElementById('selectedInfoText');
+
+      if (selectedCast && selectedTime && selectedCourseMinutes) {
+        text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourseMinutes}分)`;
+        btn.disabled = false;
+      } else if (selectedCast && selectedTime) {
+        text.innerText = `${selectedCast.name} ${selectedTime}~ (コース未選択)`;
+        btn.disabled = true;
+      } else {
+        text.innerText = '未選択';
+        btn.disabled = true;
+      }
+    }
+
+    // 予約内容をLINEへ送信するメイン処理
+    function submitReservation() {
+      const messageText = 
+`🌸 WEB予約フォームリクエスト 🌸
+------------------
+■ 日時: ${selectedDate} ${selectedTime}〜
+■ 指名: ${selectedCast.name}
+■ コース: ${selectedCourseMinutes}分
+------------------
+
+※重要なご案内※
+予約を確定させるために、
+必ずこのトークに直接「予約希望」と送信してください✨
+
+上記メッセージがないと案内ができない仕組みになっております。よろしくお願いします！`;
+
+      if (liff.isInClient()) {
+        liff.sendMessages([{ type: 'text', text: messageText }]).then(() => {
+          liff.closeWindow(); // トーク画面へ戻る
+        }).catch((err) => {
+          alert('送信エラー: ' + err);
+        });
+      } else {
+        alert('【テスト表示】LINE内では以下の文章がトーク画面へ直接送られます:\n\n' + messageText);
+      }
+    }
+
+    initLiff();
+    initDateTabs();
+    loadData();
+  </script>
+</body>
+</html>
