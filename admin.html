@@ -19,14 +19,14 @@
         </div>
 
         <nav class="space-y-2">
-          <button onclick="switchTab('casts')" id="tabBtn-casts" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-pink-600 text-white transition-all">
+          <button onclick="switchTab('casts')" id="tabBtn-casts" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
             👤 キャスト情報管理
           </button>
           <button onclick="switchTab('pricing')" id="tabBtn-pricing" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
             💰 料金・基本設定
           </button>
-          <button onclick="switchTab('schedules')" id="tabBtn-schedules" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
-            📅 出勤・予約枠コントロール
+          <button onclick="switchTab('schedules')" id="tabBtn-schedules" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-pink-600 text-white transition-all">
+            📅 月間出勤シフト管理
           </button>
         </nav>
       </div>
@@ -42,19 +42,15 @@
     <main class="flex-1 overflow-y-auto p-8 space-y-6">
 
       <!-- ================= 1. キャスト情報管理 ================= -->
-      <section id="section-casts" class="tab-content space-y-6">
+      <section id="section-casts" class="tab-content space-y-6 hidden">
         <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
           <div>
             <h2 class="text-xl font-bold text-white">👤 キャスト情報</h2>
             <p class="text-xs text-slate-400 mt-1">プロフィールの編集、スリーサイズ・身長、新人マークのON/OFFを設定します</p>
           </div>
           <div class="flex gap-3">
-            <button onclick="addNewCast()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700">
-              ＋ 新規キャスト追加
-            </button>
-            <button onclick="saveData('casts')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
-              💾 キャスト情報を更新
-            </button>
+            <button onclick="addNewCast()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700">＋ 新規キャスト追加</button>
+            <button onclick="saveData('casts')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">💾 キャスト情報を更新</button>
           </div>
         </div>
 
@@ -77,7 +73,6 @@
         </div>
       </section>
 
-
       <!-- ================= 2. 料金・基本設定 ================= -->
       <section id="section-pricing" class="tab-content space-y-6 hidden">
         <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
@@ -85,12 +80,9 @@
             <h2 class="text-xl font-bold text-white">💰 料金・基本設定</h2>
             <p class="text-xs text-slate-400 mt-1">入会金・本指名料・通常/新人料金コース・時間別ホテル代を設定します</p>
           </div>
-          <button onclick="saveData('pricing')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
-            💾 料金設定を更新
-          </button>
+          <button onclick="saveData('pricing')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">💾 料金設定を更新</button>
         </div>
 
-        <!-- 基本手数料 -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <h3 class="text-sm font-bold text-pink-400 border-l-4 border-pink-500 pl-2">基本料金設定</h3>
           <div class="grid grid-cols-2 gap-4">
@@ -105,10 +97,9 @@
           </div>
         </div>
 
-        <!-- コース料金設定 -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <div class="flex justify-between items-center">
-            <h3 class="text-sm font-bold text-pink-400 border-l-4 border-pink-500 pl-2">コース時間 ＆ 料金設定（通常 / 新人割）</h3>
+            <h3 class="text-sm font-bold text-pink-400 border-l-4 border-pink-500 pl-2">コース時間 ＆ 料金設定</h3>
             <button onclick="addNewCourse()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700">＋ コース追加</button>
           </div>
           <table class="w-full text-left border-collapse">
@@ -125,7 +116,6 @@
           </table>
         </div>
 
-        <!-- ホテル代設定 -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <div class="flex justify-between items-center">
             <h3 class="text-sm font-bold text-pink-400 border-l-4 border-pink-500 pl-2">時間別ホテル代設定</h3>
@@ -144,26 +134,59 @@
         </div>
       </section>
 
-
-      <!-- ================= 3. 出勤・予約枠コントロール ================= -->
-      <section id="section-schedules" class="tab-content space-y-6 hidden">
+      <!-- ================= 3. 月間出勤シフト管理 (カレンダー入力) ================= -->
+      <section id="section-schedules" class="tab-content space-y-6">
         <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
           <div>
-            <h2 class="text-xl font-bold text-white">📅 出勤・予約枠コントロール</h2>
-            <p class="text-xs text-slate-400 mt-1">指定日のキャスト別出勤時間・30分刻みの〇/×枠を管理します</p>
+            <h2 class="text-xl font-bold text-white">📅 月間出勤シフトカレンダー</h2>
+            <p class="text-xs text-slate-400 mt-1">キャストを選び、時間をセットして日付をクリックするだけで1か月分の出勤枠を即時入力できます</p>
           </div>
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
-              <label class="text-xs text-slate-400 font-bold">日付:</label>
-              <input type="date" id="datePicker" onchange="renderSchedules()" class="bg-transparent text-white font-bold text-sm outline-none">
-            </div>
-            <button onclick="saveData('schedules')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
-              💾 出勤情報を更新
-            </button>
-          </div>
+          <button onclick="saveData('schedules')" class="bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all">
+            💾 出勤シフトを更新
+          </button>
         </div>
 
-        <div id="scheduleContainer" class="space-y-6"></div>
+        <!-- コントロールバー -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-wrap gap-6 items-center justify-between">
+          
+          <!-- 対象年月 ＆ キャスト選択 -->
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
+              <label class="text-xs text-slate-400 font-bold">年月:</label>
+              <input type="month" id="monthPicker" onchange="renderCalendar()" class="bg-transparent text-white font-bold text-sm outline-none">
+            </div>
+
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
+              <label class="text-xs text-slate-400 font-bold">キャスト:</label>
+              <select id="castSelect" onchange="renderCalendar()" class="bg-transparent text-white font-bold text-sm outline-none cursor-pointer"></select>
+            </div>
+          </div>
+
+          <!-- 一括適用時間設定 -->
+          <div class="flex items-center gap-3 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
+            <span class="text-pink-400 font-bold">セットする出勤時間:</span>
+            <input type="time" id="presetStart" value="12:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1 font-bold">
+            <span>〜</span>
+            <input type="time" id="presetEnd" value="20:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1 font-bold">
+            <span class="text-slate-500 text-[10px]">（日付をタップするとこの時間枠が〇で適用されます）</span>
+          </div>
+
+        </div>
+
+        <!-- 月間カレンダー -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+          <div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 border-b border-slate-800 pb-2">
+            <span class="text-rose-400">日</span>
+            <span>月</span>
+            <span>火</span>
+            <span>水</span>
+            <span>木</span>
+            <span>金</span>
+            <span class="text-sky-400">土</span>
+          </div>
+          <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+        </div>
+
       </section>
 
     </main>
@@ -177,10 +200,10 @@
     let scheduleData = null;
     let fileSha = '';
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    document.getElementById('datePicker').value = todayStr;
+    const today = new Date();
+    const curYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('monthPicker').value = curYearMonth;
 
-    // 定数プルダウン用リスト
     const CUP_LIST = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
 
     function getToken() {
@@ -232,29 +255,112 @@
         const content = decodeURIComponent(escape(atob(json.content)));
         scheduleData = JSON.parse(content);
 
-        // データ互換補填
-        if (!scheduleData.pricing) {
-          scheduleData.pricing = { admissionFee: 3000, nominationFee: 3000 };
-        }
-        if (!scheduleData.courses) {
-          scheduleData.courses = [
-            { id: "c60", name: "60分コース", minutes: 60, priceNormal: 20000, priceRookie: 18000 },
-            { id: "c90", name: "90分コース", minutes: 90, priceNormal: 28000, priceRookie: 25000 }
-          ];
-        }
-        if (!scheduleData.hotelFees) {
-          scheduleData.hotelFees = [
-            { minutes: 60, price: 3000 },
-            { minutes: 90, price: 4000 }
-          ];
-        }
+        if (!scheduleData.pricing) scheduleData.pricing = { admissionFee: 3000, nominationFee: 3000 };
+        if (!scheduleData.courses) scheduleData.courses = [{ id: "c60", name: "60分コース", minutes: 60, priceNormal: 20000, priceRookie: 18000 }];
+        if (!scheduleData.hotelFees) scheduleData.hotelFees = [{ minutes: 60, price: 3000 }];
 
         renderCasts();
         renderPricing();
-        renderSchedules();
+        initCastSelect();
+        renderCalendar();
       } catch (err) {
         alert('データの取得に失敗しました。トークンを確認してください。');
       }
+    }
+
+    /* --- キャストドロップダウン初期化 --- */
+    function initCastSelect() {
+      const select = document.getElementById('castSelect');
+      select.innerHTML = '';
+      scheduleData.casts.forEach((cast, i) => {
+        const opt = document.createElement('option');
+        opt.value = cast.id;
+        opt.innerText = `${cast.name} (${cast.isRookie ? '新人' : '通常'})`;
+        select.appendChild(opt);
+      });
+    }
+
+    /* --- 月間カレンダー描画 ＆ タップ切り替え --- */
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      const castId = document.getElementById('castSelect').value;
+      const monthVal = document.getElementById('monthPicker').value; // YYYY-MM
+      if (!castId || !monthVal) return;
+
+      const [year, month] = monthVal.split('-').map(Number);
+      const firstDay = new Date(year, month - 1, 1).getDay(); // 曜日のオフセット
+      const totalDays = new Date(year, month, 0).getDate(); // 当月の総日数
+
+      // 空白セル埋め
+      for (let i = 0; i < firstDay; i++) {
+        const blank = document.createElement('div');
+        blank.className = 'bg-slate-950/40 min-h-[90px] rounded-xl border border-slate-900/50';
+        grid.appendChild(blank);
+      }
+
+      // 日付セル生成
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const daySchedules = scheduleData.schedules[dateStr] || {};
+        const castSlots = daySchedules[castId] || {};
+        const timeKeys = Object.keys(castSlots).filter(t => castSlots[t] === 'ok').sort();
+
+        const isWorking = timeKeys.length > 0;
+        let timeRangeText = isWorking ? `${timeKeys[0]} 〜 ${timeKeys[timeKeys.length - 1]}` : '休';
+
+        const cell = document.createElement('div');
+        cell.onclick = () => toggleDayShift(dateStr, castId);
+        cell.className = `p-2 min-h-[90px] rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+          isWorking ? 'bg-pink-950/30 border-pink-500/60 hover:bg-pink-900/40' : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+        }`;
+
+        cell.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-sm ${isWorking ? 'text-pink-400' : 'text-slate-400'}">${day}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded ${isWorking ? 'bg-pink-600 text-white font-bold' : 'bg-slate-800 text-slate-500'}">
+              ${isWorking ? '出勤' : '休み'}
+            </span>
+          </div>
+          <div class="text-[11px] font-mono text-center ${isWorking ? 'text-slate-200 font-bold' : 'text-slate-600'}">
+            ${timeRangeText}
+          </div>
+        `;
+        grid.appendChild(cell);
+      }
+    }
+
+    // 日付タップ時にセットするロジック（ON/OFF）
+    function toggleDayShift(dateStr, castId) {
+      if (!scheduleData.schedules[dateStr]) scheduleData.schedules[dateStr] = {};
+      if (!scheduleData.schedules[dateStr][castId]) scheduleData.schedules[dateStr][castId] = {};
+
+      const currentSlots = scheduleData.schedules[dateStr][castId];
+      const hasShift = Object.keys(currentSlots).some(t => currentSlots[t] === 'ok');
+
+      if (hasShift) {
+        // すでに出勤がある場合は「休み（クリア）」にする
+        scheduleData.schedules[dateStr][castId] = {};
+      } else {
+        // 出勤が無い場合はプリセット時間帯で一括生成
+        const start = document.getElementById('presetStart').value;
+        const end = document.getElementById('presetEnd').value;
+        if (!start || !end) return;
+
+        let current = new Date(`2026-01-01T${start}:00`);
+        const endDate = new Date(`2026-01-01T${end}:00`);
+
+        const newSlots = {};
+        while (current < endDate) {
+          const timeStr = current.toTimeString().substring(0, 5);
+          newSlots[timeStr] = "ok";
+          current.setMinutes(current.getMinutes() + 30);
+        }
+        scheduleData.schedules[dateStr][castId] = newSlots;
+      }
+
+      renderCalendar();
     }
 
     /* --- 1. キャスト描画 --- */
@@ -263,24 +369,20 @@
       tbody.innerHTML = '';
 
       scheduleData.casts.forEach((cast, idx) => {
-        // デフォルト補填
         if (!cast.height) cast.height = 160;
         if (!cast.bust) cast.bust = 85;
         if (!cast.cup) cast.cup = 'D';
         if (!cast.waist) cast.waist = 58;
         if (!cast.hip) cast.hip = 86;
-        if (cast.isRookie === undefined) cast.isRookie = false;
 
         let cupOptions = CUP_LIST.map(c => `<option value="${c}" ${cast.cup === c ? 'selected' : ''}>${c}</option>`).join('');
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/40 transition-all';
         tr.innerHTML = `
-          <td class="p-3 text-center">
-            <input type="checkbox" ${cast.isRookie ? 'checked' : ''} onchange="scheduleData.casts[${idx}].isRookie = this.checked" class="w-4 h-4 accent-pink-500">
-          </td>
+          <td class="p-3 text-center"><input type="checkbox" ${cast.isRookie ? 'checked' : ''} onchange="scheduleData.casts[${idx}].isRookie = this.checked; initCastSelect();" class="w-4 h-4 accent-pink-500"></td>
           <td class="p-3"><img src="${cast.photo}" class="w-9 h-9 object-cover rounded-lg bg-slate-800 border border-slate-700"></td>
-          <td class="p-3"><input type="text" value="${cast.name}" onchange="scheduleData.casts[${idx}].name = this.value" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-28"></td>
+          <td class="p-3"><input type="text" value="${cast.name}" onchange="scheduleData.casts[${idx}].name = this.value; initCastSelect();" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-28"></td>
           <td class="p-3"><input type="number" value="${cast.age}" onchange="scheduleData.casts[${idx}].age = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-14"></td>
           <td class="p-3"><input type="number" min="135" max="180" value="${cast.height}" onchange="scheduleData.casts[${idx}].height = Number(this.value)" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-16"> cm</td>
           <td class="p-3">
@@ -294,7 +396,7 @@
             </div>
           </td>
           <td class="p-3"><input type="text" value="${cast.photo}" onchange="scheduleData.casts[${idx}].photo = this.value" class="bg-slate-950 text-white p-1.5 rounded border border-slate-800 w-48 text-[10px]"></td>
-          <td class="p-3 text-right"><button onclick="deleteCast(${idx})" class="text-rose-400 hover:text-rose-300 font-bold px-2 py-1 bg-rose-950/40 border border-rose-800 rounded">削除</button></td>
+          <td class="p-3 text-right"><button onclick="deleteCast(${idx})" class="text-rose-400 font-bold px-2 py-1 bg-rose-950/40 border border-rose-800 rounded">削除</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -302,29 +404,27 @@
 
     function addNewCast() {
       const newId = 'cast_' + String(scheduleData.casts.length + 1).padStart(2, '0');
-      scheduleData.casts.push({
-        id: newId, name: '新規キャスト', age: 20, height: 160, bust: 85, cup: 'D', waist: 58, hip: 86, isRookie: true, photo: 'https://via.placeholder.com/150'
-      });
+      scheduleData.casts.push({ id: newId, name: '新規キャスト', age: 20, height: 160, bust: 85, cup: 'D', waist: 58, hip: 86, isRookie: true, photo: 'https://via.placeholder.com/150' });
       renderCasts();
+      initCastSelect();
     }
 
     function deleteCast(idx) {
       if (confirm('このキャストを削除しますか？')) {
         scheduleData.casts.splice(idx, 1);
         renderCasts();
+        initCastSelect();
       }
     }
 
     /* --- 2. 料金描画 --- */
     function renderPricing() {
-      // 基本料金
       document.getElementById('baseAdmissionFee').value = scheduleData.pricing.admissionFee || 0;
       document.getElementById('baseNominationFee').value = scheduleData.pricing.nominationFee || 0;
 
       document.getElementById('baseAdmissionFee').onchange = (e) => scheduleData.pricing.admissionFee = Number(e.target.value);
       document.getElementById('baseNominationFee').onchange = (e) => scheduleData.pricing.nominationFee = Number(e.target.value);
 
-      // コース料金
       const courseTbody = document.getElementById('courseTableBody');
       courseTbody.innerHTML = '';
       scheduleData.courses.forEach((course, idx) => {
@@ -340,7 +440,6 @@
         courseTbody.appendChild(tr);
       });
 
-      // ホテル代
       const hotelTbody = document.getElementById('hotelTableBody');
       hotelTbody.innerHTML = '';
       scheduleData.hotelFees.forEach((hotel, idx) => {
@@ -373,89 +472,7 @@
       renderPricing();
     }
 
-    /* --- 3. 出勤描画 --- */
-    function renderSchedules() {
-      const container = document.getElementById('scheduleContainer');
-      container.innerHTML = '';
-
-      const targetDate = document.getElementById('datePicker').value;
-      if (!scheduleData.schedules[targetDate]) scheduleData.schedules[targetDate] = {};
-      const daySchedules = scheduleData.schedules[targetDate];
-
-      scheduleData.casts.forEach(cast => {
-        if (!daySchedules[cast.id]) daySchedules[cast.id] = {};
-        const slots = daySchedules[cast.id];
-
-        const card = document.createElement('div');
-        card.className = 'bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4';
-
-        let slotsHtml = '<div class="grid grid-cols-6 sm:grid-cols-12 gap-2 mt-2">';
-        const timeKeys = Object.keys(slots).sort();
-
-        if (timeKeys.length === 0) {
-          slotsHtml += '<p class="col-span-full text-xs text-slate-500 italic">※出勤枠未設定</p>';
-        } else {
-          timeKeys.forEach(time => {
-            const status = slots[time];
-            const isOK = status === 'ok';
-
-            slotsHtml += `
-              <button onclick="toggleSlot('${cast.id}', '${time}')" class="p-2 rounded-xl border flex flex-col items-center justify-center font-bold transition-all ${
-                isOK ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400' : 'bg-rose-950/40 border-rose-800 text-rose-400'
-              }">
-                <span class="text-[10px] text-slate-400 font-mono">${time}</span>
-                <span class="text-xs">${isOK ? '〇' : '×'}</span>
-              </button>
-            `;
-          });
-        }
-        slotsHtml += '</div>';
-
-        card.innerHTML = `
-          <div class="flex justify-between items-center pb-3 border-b border-slate-800">
-            <div class="flex items-center gap-3">
-              <img src="${cast.photo}" class="w-8 h-8 object-cover rounded-lg bg-slate-800">
-              <h3 class="font-bold text-white text-sm">${cast.name} ${cast.isRookie ? '<span class="text-[10px] bg-pink-950 text-pink-400 px-1.5 py-0.5 rounded border border-pink-800">新人</span>' : ''}</h3>
-            </div>
-            <div class="flex items-center gap-2 text-xs bg-slate-950 p-2 rounded-xl border border-slate-800">
-              <span class="text-slate-400 font-bold">出勤時間:</span>
-              <input type="time" id="start_${cast.id}" value="12:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1">
-              <span>〜</span>
-              <input type="time" id="end_${cast.id}" value="20:00" class="bg-slate-900 border border-slate-700 text-white rounded p-1">
-              <button onclick="generateShift('${cast.id}')" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded text-xs font-bold border border-slate-700">一括生成</button>
-            </div>
-          </div>
-          ${slotsHtml}
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function generateShift(castId) {
-      const targetDate = document.getElementById('datePicker').value;
-      const start = document.getElementById(`start_${castId}`).value;
-      const end = document.getElementById(`end_${castId}`).value;
-      if (!start || !end) return;
-
-      let current = new Date(`2026-01-01T${start}:00`);
-      const endDate = new Date(`2026-01-01T${end}:00`);
-      const newSlots = {};
-      while (current < endDate) {
-        const timeStr = current.toTimeString().substring(0, 5);
-        newSlots[timeStr] = "ok";
-        current.setMinutes(current.getMinutes() + 30);
-      }
-      scheduleData.schedules[targetDate][castId] = newSlots;
-      renderSchedules();
-    }
-
-    function toggleSlot(castId, time) {
-      const targetDate = document.getElementById('datePicker').value;
-      const currentStatus = scheduleData.schedules[targetDate][castId][time];
-      scheduleData.schedules[targetDate][castId][time] = currentStatus === 'ok' ? 'ng' : 'ok';
-      renderSchedules();
-    }
-
+    /* --- GitHubへの一括保存 --- */
     async function saveData(targetCategoryName) {
       const token = getToken();
       if (!token) return;
