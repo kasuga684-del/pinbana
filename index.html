@@ -250,9 +250,8 @@
       renderCastList();
       updateCalculation();
 
-      // ヘッダーの高さを考慮して、少し余裕を持たせた位置へスクロール（ヘッダーと被らない位置）
       setTimeout(() => {
-        const yOffset = -80; // ヘッダー分少し上に位置を調整
+        const yOffset = -80;
         const y = courseSec.getBoundingClientRect().top + window.pageYOffset + yOffset;
         window.scrollTo({ top: y, behavior: 'smooth' });
       }, 100);
@@ -350,6 +349,7 @@
       }
     }
 
+    // ★画像と同等の文面を自動作成して送信する関数
     function submitReservation() {
       const name = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
@@ -362,28 +362,31 @@
       const total = coursePrice + nominationFee + admissionFee + hotelPrice;
 
       const messageText = 
-`🌸 WEB予約フォームリクエスト 🌸
-------------------
-■ お客様名: ${name} 様
-■ お電話番号: ${phone}
-■ 当店ご利用歴: ${isFirstVisit ? '初めて (入会金あり)' : '2回目以降'}
-------------------
-■ 予約日時: ${selectedDate} ${selectedTime}〜
-■ 指名キャスト: ${selectedCast.name} (${isNominationRepeat ? '指名2回目以降' : '指名初めて'})
-■ 選択コース: ${selectedCourse.name}
-------------------
-【概算お支払総額】
-コース代: ¥${coursePrice.toLocaleString()}
-指名料: ¥${nominationFee.toLocaleString()}
-入会金: ¥${admissionFee.toLocaleString()}
-ホテル代: ¥${hotelPrice.toLocaleString()}
-------------------
-■ 総額合計: ¥${total.toLocaleString()}
-------------------
+`🌸 WEB予約フォーム 🌸
+送信ありがとうございます！
 
-※重要なご案内※
-予約を確定させるために、
-必ずこのトークに直接「予約希望」と送信してください✨`;
+お名前：${name}
+お電話番号：${phone}
+当店ご利用歴：${isFirstVisit ? '初めて' : '2回目以降'}
+
+ご希望日時：${selectedDate} ${selectedTime}〜
+指名キャスト：${selectedCast.name} (${isNominationRepeat ? '指名2回目以降' : '指名初めて'})
+選択コース：${selectedCourse.name}
+
+【お支払概算合計】
+¥${total.toLocaleString()}
+
+上記の内容で予約のご希望を受け付けました✨
+
+※重要※
+予約日時を確定するために、
+必ずこのLINEのトークに直接「予約希望」と送ってください✨
+
+こちらのメッセージを頂けないと、
+予約日時をご案内することができない仕組みになっています💦
+
+一言だけで大丈夫ですので、
+忘れずにお願いいたします🙇‍♂️`;
 
       if (liff.isInClient()) {
         liff.sendMessages([{ type: 'text', text: messageText }]).then(() => {
