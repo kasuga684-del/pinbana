@@ -11,7 +11,7 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-36">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-40">
 
   <header class="sticky top-0 bg-slate-950/90 backdrop-blur border-b border-slate-800 p-4 text-center z-20">
     <h1 class="text-lg font-black tracking-wider text-pink-500">WEB RESERVATION</h1>
@@ -19,41 +19,86 @@
 
   <main class="max-w-md mx-auto p-4 space-y-6">
 
-    <!-- 1. 日付選択 -->
+    <!-- STEP 1: 日にち選択 -->
     <section>
-      <label class="text-xs font-bold text-slate-400 mb-2 block">📅 予約希望日（1ヶ月先まで選択可能）</label>
+      <label class="text-xs font-bold text-slate-400 mb-2 block">1. 📅 予約希望日を選択</label>
       <div id="dateContainer" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
     </section>
 
-    <!-- 2. 出勤キャスト ＆ 30分枠選択 -->
+    <!-- STEP 2: キャスト ＆ 時間選択 -->
     <section class="space-y-4">
-      <h2 id="selectedDateTitle" class="text-sm font-bold border-l-4 border-pink-500 pl-2 text-pink-400">
-        出勤・空き状況
+      <h2 id="selectedDateTitle" class="text-xs font-bold border-l-4 border-pink-500 pl-2 text-pink-400">
+        2. 👤 キャスト ＆ ご案内時間を選択
       </h2>
       <div id="castListContainer" class="space-y-4">
         <p class="text-xs text-slate-500 italic">データを読み込み中...</p>
       </div>
     </section>
 
-    <!-- 3. コース選択 -->
-    <section id="courseSection" class="space-y-2 hidden">
+    <!-- STEP 3: コース ＆ 本指名選択 -->
+    <section id="courseSection" class="space-y-4 hidden border-t border-slate-800 pt-4">
       <div class="flex justify-between items-center">
-        <label class="text-xs font-bold text-slate-400">⏱ コースを選択</label>
+        <label class="text-xs font-bold text-slate-400">3. ⏱ コース ＆ 本指名選択</label>
         <span id="rookieBadge" class="text-[10px] bg-pink-950 text-pink-400 px-2 py-0.5 rounded border border-pink-800 font-bold hidden">🎉 新人割引適応中</span>
       </div>
+
+      <!-- コース一覧 -->
       <div id="courseContainer" class="grid grid-cols-2 gap-2"></div>
+
+      <!-- 本指名選択 -->
+      <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
+        <label class="text-xs text-slate-300 font-bold block">本指名の選択</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="setNomination(true)" id="nomTrueBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-pink-500 bg-pink-950/30 text-white">
+            本指名する (+¥1,000)
+          </button>
+          <button type="button" onclick="setNomination(false)" id="nomFalseBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-slate-800 bg-slate-950 text-slate-400">
+            フリー (指名なし)
+          </button>
+        </div>
+      </div>
     </section>
 
-    <!-- 4. 概算料金の内訳計算 -->
+    <!-- STEP 4: お客様情報入力 -->
+    <section id="userInfoSection" class="space-y-4 hidden border-t border-slate-800 pt-4">
+      <label class="text-xs font-bold text-slate-400 block">4. 📝 お客様情報の入力</label>
+      
+      <!-- 当店のご利用有無 -->
+      <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
+        <label class="text-xs text-slate-300 font-bold block">当店のご利用歴</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="setFirstVisit(true)" id="visitFirstBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-pink-500 bg-pink-950/30 text-white">
+            初めて (+入会金¥1,000)
+          </button>
+          <button type="button" onclick="setFirstVisit(false)" id="visitRepeatBtn" class="p-2.5 rounded-lg border text-xs font-bold text-center border-slate-800 bg-slate-950 text-slate-400">
+            2回目以降 (¥0)
+          </button>
+        </div>
+      </div>
+
+      <!-- お名前 ＆ 電話番号 -->
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">お名前 (偽名でも可) <span class="text-pink-500">*</span></label>
+          <input type="text" id="custName" oninput="updateCalculation()" placeholder="例: かすが" class="w-full bg-slate-950 text-white p-2.5 rounded-lg border border-slate-800 text-sm outline-none focus:border-pink-500">
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">お電話番号 <span class="text-pink-500">*</span></label>
+          <input type="tel" id="custPhone" oninput="updateCalculation()" placeholder="例: 09012345678" class="w-full bg-slate-950 text-white p-2.5 rounded-lg border border-slate-800 text-sm outline-none focus:border-pink-500">
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 5: 概算料金計算 -->
     <section id="priceBreakdownSection" class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs hidden">
-      <h3 class="font-bold text-slate-300 border-b border-slate-800 pb-2">🧾 お支払概算内訳</h3>
-      <div class="space-y-1 text-slate-400">
+      <h3 class="font-bold text-slate-300 border-b border-slate-800 pb-2">🧾 お支払総額（概算内訳）</h3>
+      <div class="space-y-1.5 text-slate-400">
         <div class="flex justify-between"><span>コース料金:</span><span id="pCourse">¥0</span></div>
         <div class="flex justify-between"><span>本指名料:</span><span id="pNomination">¥0</span></div>
-        <div class="flex justify-between"><span>入会金 (初回):</span><span id="pAdmission">¥0</span></div>
-        <div class="flex justify-between"><span>ホテル代 (概算):</span><span id="pHotel">¥0</span></div>
+        <div class="flex justify-between"><span>入会金:</span><span id="pAdmission">¥0</span></div>
+        <div class="flex justify-between"><span>ホテル代 (可変/概算):</span><span id="pHotel">¥0</span></div>
       </div>
-      <div class="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm text-pink-400">
+      <div class="border-t border-slate-800 pt-2 flex justify-between font-bold text-base text-pink-400">
         <span>概算合計金額:</span>
         <span id="pTotal">¥0</span>
       </div>
@@ -61,14 +106,14 @@
 
   </main>
 
-  <!-- フッター -->
+  <!-- フッターバー -->
   <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 border-t border-slate-800 p-4 backdrop-blur-md z-30 space-y-2">
     <div class="flex justify-between items-center text-xs">
       <span class="text-slate-400">選択状況:</span>
       <span id="selectedInfoText" class="font-bold text-pink-400">未選択</span>
     </div>
     <button id="nextBtn" disabled onclick="submitReservation()" class="w-full bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">
-      予約内容をLINEへ送信 ➔
+      予約フォームを送信 (LINEヘ) ➔
     </button>
   </div>
 
@@ -80,6 +125,8 @@
     let selectedCast = null;
     let selectedTime = '';
     let selectedCourse = null;
+    let isNomination = true; // デフォルト: 本指名あり
+    let isFirstVisit = true; // デフォルト: 初めて
 
     const today = new Date();
 
@@ -116,6 +163,7 @@
           selectedTime = '';
           selectedCourse = null;
           document.getElementById('courseSection').classList.add('hidden');
+          document.getElementById('userInfoSection').classList.add('hidden');
           document.getElementById('priceBreakdownSection').classList.add('hidden');
           initDateTabs();
           renderCastList();
@@ -135,7 +183,7 @@
 
     function renderCastList() {
       if (!scheduleData) return;
-      document.getElementById('selectedDateTitle').innerText = `${selectedDate} の出勤・空き状況`;
+      document.getElementById('selectedDateTitle').innerText = `2. 👤 ${selectedDate} のキャスト ＆ 時間を選択`;
 
       const container = document.getElementById('castListContainer');
       container.innerHTML = '';
@@ -191,17 +239,19 @@
       selectedCast = scheduleData.casts.find(c => c.id === castId);
       selectedTime = time;
       selectedCourse = null;
+
+      document.getElementById('courseSection').classList.remove('hidden');
+      document.getElementById('userInfoSection').classList.remove('hidden');
+
       renderCourses();
       renderCastList();
-      updateFooter();
+      updateCalculation();
     }
 
     function renderCourses() {
-      const section = document.getElementById('courseSection');
       const container = document.getElementById('courseContainer');
       const rookieBadge = document.getElementById('rookieBadge');
       container.innerHTML = '';
-      section.classList.remove('hidden');
 
       if (selectedCast.isRookie) {
         rookieBadge.classList.remove('hidden');
@@ -214,7 +264,8 @@
         const isSelected = selectedCourse?.id === c.id;
 
         const btn = document.createElement('button');
-        btn.onclick = () => selectCourse(c);
+        btn.type = 'button';
+        btn.onclick = () => { selectedCourse = c; renderCourses(); updateCalculation(); };
         btn.className = `p-3 rounded-xl border text-left font-bold transition-all ${
           isSelected ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-900 text-slate-300'
         }`;
@@ -226,22 +277,32 @@
       });
     }
 
-    function selectCourse(course) {
-      selectedCourse = course;
-      renderCourses();
-      calculateBreakdown();
-      updateFooter();
+    function setNomination(val) {
+      isNomination = val;
+      document.getElementById('nomTrueBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${val ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
+      document.getElementById('nomFalseBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${!val ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
+      updateCalculation();
     }
 
-    function calculateBreakdown() {
-      if (!selectedCast || !selectedCourse) return;
+    function setFirstVisit(val) {
+      isFirstVisit = val;
+      document.getElementById('visitFirstBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${val ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
+      document.getElementById('visitRepeatBtn').className = `p-2.5 rounded-lg border text-xs font-bold text-center ${!val ? 'border-pink-500 bg-pink-950/30 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'}`;
+      updateCalculation();
+    }
 
-      const breakdownSec = document.getElementById('priceBreakdownSection');
-      breakdownSec.classList.remove('hidden');
+    function updateCalculation() {
+      if (!selectedCast || !selectedCourse) {
+        document.getElementById('priceBreakdownSection').classList.add('hidden');
+        updateFooter();
+        return;
+      }
+
+      document.getElementById('priceBreakdownSection').classList.remove('hidden');
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = scheduleData.pricing.nominationFee || 0;
-      const admissionFee = scheduleData.pricing.admissionFee || 0;
+      const nominationFee = isNomination ? 1000 : 0;
+      const admissionFee = isFirstVisit ? 1000 : 0;
       
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
@@ -253,15 +314,23 @@
       document.getElementById('pAdmission').innerText = `¥${admissionFee.toLocaleString()}`;
       document.getElementById('pHotel').innerText = `¥${hotelPrice.toLocaleString()}`;
       document.getElementById('pTotal').innerText = `¥${total.toLocaleString()}`;
+
+      updateFooter();
     }
 
     function updateFooter() {
       const btn = document.getElementById('nextBtn');
       const text = document.getElementById('selectedInfoText');
 
-      if (selectedCast && selectedTime && selectedCourse) {
+      const name = document.getElementById('custName')?.value.trim();
+      const phone = document.getElementById('custPhone')?.value.trim();
+
+      if (selectedCast && selectedTime && selectedCourse && name && phone) {
         text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourse.name})`;
         btn.disabled = false;
+      } else if (selectedCast && selectedTime && selectedCourse) {
+        text.innerText = `お名前・電話番号を入力してください`;
+        btn.disabled = true;
       } else if (selectedCast && selectedTime) {
         text.innerText = `${selectedCast.name} ${selectedTime}~ (コース未選択)`;
         btn.disabled = true;
@@ -272,9 +341,12 @@
     }
 
     function submitReservation() {
+      const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = scheduleData.pricing.nominationFee || 0;
-      const admissionFee = scheduleData.pricing.admissionFee || 0;
+      const nominationFee = isNomination ? 1000 : 0;
+      const admissionFee = isFirstVisit ? 1000 : 0;
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
       const total = coursePrice + nominationFee + admissionFee + hotelPrice;
@@ -282,10 +354,21 @@
       const messageText = 
 `🌸 WEB予約フォームリクエスト 🌸
 ------------------
-■ 日時: ${selectedDate} ${selectedTime}〜
-■ 指名: ${selectedCast.name} ${selectedCast.isRookie ? '(新人)' : ''}
-■ コース: ${selectedCourse.name}
-■ 概算合計: ¥${total.toLocaleString()}
+■ お客様名: ${name} 様
+■ お電話番号: ${phone}
+■ 当店ご利用歴: ${isFirstVisit ? '初めて (入会金あり)' : '2回目以降'}
+------------------
+■ 予約日時: ${selectedDate} ${selectedTime}〜
+■ 指名キャスト: ${selectedCast.name} ${isNomination ? '(本指名)' : '(フリー)'}
+■ 選択コース: ${selectedCourse.name}
+------------------
+【概算お支払総額】
+コース代: ¥${coursePrice.toLocaleString()}
+指名料: ¥${nominationFee.toLocaleString()}
+入会金: ¥${admissionFee.toLocaleString()}
+ホテル代: ¥${hotelPrice.toLocaleString()}
+------------------
+■ 総額合計: ¥${total.toLocaleString()}
 ------------------
 
 ※重要なご案内※
