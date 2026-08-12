@@ -150,11 +150,12 @@
         const dayName = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
         const displayStr = `${d.getMonth() + 1}/${d.getDate()}(${dayName})`;
 
-        if (i === 0) selectedDate = dateStr;
+        if (!selectedDate && i === 0) selectedDate = dateStr;
 
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = `flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-          selectedDate === dateStr ? 'bg-pink-600 text-white border-pink-500 shadow-md' : 'bg-white text-slate-600 border-slate-200'
+          selectedDate === dateStr ? 'bg-pink-600 text-white border-pink-500 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
         }`;
         btn.innerText = displayStr;
         btn.onclick = () => {
