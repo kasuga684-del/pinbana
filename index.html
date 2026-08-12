@@ -9,6 +9,7 @@
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    html { scroll-behavior: smooth; } /* スムーススクロール対応 */
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-40">
@@ -125,8 +126,8 @@
     let selectedCast = null;
     let selectedTime = '';
     let selectedCourse = null;
-    let isNominationRepeat = false; // 指名: デフォルト「初めて（¥0）」
-    let isFirstVisit = true;        // 店利用: デフォルト「初めて（+¥1,000）」
+    let isNominationRepeat = false;
+    let isFirstVisit = true;
 
     const today = new Date();
 
@@ -242,12 +243,18 @@
 
       document.getElementById('castPlayTitle').innerText = `${selectedCast.name}とのお遊び`;
 
-      document.getElementById('courseSection').classList.remove('hidden');
+      const courseSec = document.getElementById('courseSection');
+      courseSec.classList.remove('hidden');
       document.getElementById('userInfoSection').classList.remove('hidden');
 
       renderCourses();
       renderCastList();
       updateCalculation();
+
+      // ★時間コマタップ時に下（コース選択画面）へスムーズにスクロール
+      setTimeout(() => {
+        courseSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
 
     function renderCourses() {
@@ -303,8 +310,8 @@
       document.getElementById('priceBreakdownSection').classList.remove('hidden');
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = isNominationRepeat ? 1000 : 0; // 2回目以降なら1000円、初めてなら0円
-      const admissionFee = isFirstVisit ? 1000 : 0;        // 初めてなら1000円、2回目以降なら0円
+      const nominationFee = isNominationRepeat ? 1000 : 0;
+      const admissionFee = isFirstVisit ? 1000 : 0;
       
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
