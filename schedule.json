@@ -264,6 +264,27 @@
       "minutes": 45,
       "priceNormal": 9000,
       "priceRookie": 5000
+    },
+    {
+      "id": "crs_1787120866019",
+      "name": "新設コース",
+      "minutes": 60,
+      "priceNormal": 15000,
+      "priceRookie": 13000
+    },
+    {
+      "id": "crs_1787120869273",
+      "name": "新設コース",
+      "minutes": 60,
+      "priceNormal": 15000,
+      "priceRookie": 13000
+    },
+    {
+      "id": "crs_1787120869626",
+      "name": "新設コース",
+      "minutes": 60,
+      "priceNormal": 15000,
+      "priceRookie": 13000
     }
   ],
   "hotelFees": [
