@@ -9,6 +9,22 @@
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 右端フェード（スクロール可能であることを示す影） */
+    .scroll-container-wrapper {
+      position: relative;
+    }
+    .scroll-container-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 28px;
+      background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.95));
+      pointer-events: none;
+      border-radius: 0 1rem 1rem 0;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-40">
@@ -21,8 +37,13 @@
 
     <!-- STEP 1: 日にち選択 -->
     <section>
-      <label class="text-xs font-bold text-slate-500 mb-2 block">1. 📅 予約希望日を選択</label>
-      <div id="dateContainer" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
+      <div class="flex justify-between items-center mb-2">
+        <label class="text-xs font-bold text-slate-500 block">1. 📅 予約希望日を選択</label>
+        <span class="text-[10px] text-pink-500 font-bold">横スクロール ➔</span>
+      </div>
+      <div class="scroll-container-wrapper">
+        <div id="dateContainer" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar pr-6"></div>
+      </div>
     </section>
 
     <!-- STEP 2: キャスト ＆ 時間選択 -->
@@ -120,7 +141,6 @@
   <script>
     const LIFF_ID = '2010290704-NS1l65Na';
 
-    // 定義通りの時間順（ソート基準）
     const TIME_ORDER = [
       '10:00','10:30','11:00','11:30',
       '12:00','12:30','13:00','13:30',
@@ -239,7 +259,6 @@
       activeCasts.forEach(cast => {
         const slots = daySchedules[cast.id] || {};
         
-        // ★時間を必ず「10:00 → 10:30 → 11:00 ...」の昇順に並び替え
         const timeKeys = Object.keys(slots).sort((a, b) => {
           const idxA = TIME_ORDER.indexOf(a);
           const idxB = TIME_ORDER.indexOf(b);
@@ -248,23 +267,22 @@
         });
 
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-2xl p-4 border border-slate-200 shadow-sm';
+        card.className = 'bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2';
 
-        let slotsHtml = '<div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar mt-3">';
+        let slotsHtml = '';
         timeKeys.forEach(time => {
           const status = slots[time];
           const isSelected = selectedCast?.id === cast.id && selectedTime === time;
           const isNG = status === 'ng';
 
           slotsHtml += `
-            <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+            <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
               isNG ? 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-500 scale-105 shadow-md' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
             }">
               ${status === 'ok' ? '〇 ' : '× '} ${time}
             </button>
           `;
         });
-        slotsHtml += '</div>';
 
         card.innerHTML = `
           <div class="flex gap-3 items-center">
@@ -277,7 +295,17 @@
               <p class="text-xs text-slate-500 mt-0.5">T${cast.height} / B${cast.bust}(${cast.cup}) / W${cast.waist} / H${cast.hip}</p>
             </div>
           </div>
-          ${slotsHtml}
+          <div class="pt-2 border-t border-slate-100">
+            <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1.5 px-0.5">
+              <span>ご案内時間を選択:</span>
+              <span class="text-pink-500 font-bold text-[10px]">横スクロール ➔</span>
+            </div>
+            <div class="scroll-container-wrapper">
+              <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar pr-6">
+                ${slotsHtml}
+              </div>
+            </div>
+          </div>
         `;
         container.appendChild(card);
       });
@@ -326,7 +354,6 @@
         rookieBadge.classList.add('hidden');
       }
 
-      // コースも分数順（短い順）に整列
       const sortedCourses = [...scheduleData.courses].sort((a, b) => a.minutes - b.minutes);
 
       sortedCourses.forEach(c => {
