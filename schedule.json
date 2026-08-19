@@ -267,21 +267,21 @@
     },
     {
       "id": "crs_1787120866019",
-      "name": "新設コース",
+      "name": "60分コース",
       "minutes": 60,
-      "priceNormal": 15000,
-      "priceRookie": 13000
+      "priceNormal": 12000,
+      "priceRookie": 8000
     },
     {
       "id": "crs_1787120869273",
-      "name": "新設コース",
-      "minutes": 60,
-      "priceNormal": 15000,
-      "priceRookie": 13000
+      "name": "75分コース",
+      "minutes": 75,
+      "priceNormal": 16000,
+      "priceRookie": 11000
     },
     {
       "id": "crs_1787120869626",
-      "name": "新設コース",
+      "name": "90分コース",
       "minutes": 60,
       "priceNormal": 15000,
       "priceRookie": 13000
