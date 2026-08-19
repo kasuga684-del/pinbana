@@ -27,8 +27,8 @@
       <p class="text-[10px] text-slate-400">※ブラウザ内にのみ保存されます。GitHubの `repo` 権限を持つトークンを入力してください。</p>
     </div>
 
-    <!-- タブ切り替え -->
-    <div class="flex border-b border-slate-200 bg-white rounded-t-2xl px-2 pt-2 gap-2 text-xs font-bold">
+    <!-- タブ切り替え（左揃え） -->
+    <div class="flex justify-start border-b border-slate-200 bg-white rounded-t-2xl px-4 pt-2 gap-2 text-xs font-bold">
       <button onclick="switchTab('schedule')" id="tabSchedule" class="px-4 py-2.5 text-pink-600 border-b-2 border-pink-500">📅 出勤・空き枠管理</button>
       <button onclick="switchTab('casts')" id="tabCasts" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">👤 キャスト登録・編集</button>
       <button onclick="switchTab('courses')" id="tabCourses" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">⏱ コース・料金設定</button>
@@ -54,7 +54,10 @@
 
     <!-- TAB 3: コース料金管理 -->
     <section id="secCourses" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-4 hidden">
-      <h2 class="text-xs font-bold text-slate-500">コース・料金設定</h2>
+      <div class="flex justify-between items-center">
+        <h2 class="text-xs font-bold text-slate-500">コース・料金設定</h2>
+        <button onclick="addNewCourse()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl">+ 新規コース追加</button>
+      </div>
       <div id="courseList" class="space-y-3"></div>
     </section>
 
@@ -107,7 +110,6 @@
         renderCastEditor();
         renderCourseEditor();
       } catch (err) {
-        // ローカル読み込みフォールバック
         const res = await fetch(`./schedule.json?t=${Date.now()}`);
         rawData = await res.json();
         renderScheduleEditor();
@@ -134,7 +136,7 @@
         const timeList = ['12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00'];
 
         timeList.forEach(t => {
-          const status = currentSlots[t]; // 'ok', 'ng', or undefined
+          const status = currentSlots[t];
           let color = 'bg-white border-slate-200 text-slate-400';
           let label = '-';
           if (status === 'ok') { color = 'bg-green-500 text-white border-green-600 font-bold'; label = '〇'; }
@@ -254,7 +256,7 @@
       }
     }
 
-    // --- TAB 3: コース料金管理 ---
+    // --- TAB 3: コース料金管理（新規追加・削除対応） ---
     function renderCourseEditor() {
       if (!rawData) return;
       const container = document.getElementById('courseList');
@@ -262,20 +264,52 @@
 
       rawData.courses.forEach((c, idx) => {
         const div = document.createElement('div');
-        div.className = 'border border-slate-200 rounded-2xl p-4 bg-slate-50 grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs items-center';
+        div.className = 'border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3';
         div.innerHTML = `
-          <div class="font-bold text-slate-700">${c.name} (${c.minutes}分)</div>
-          <div>
-            <label class="text-slate-400 block text-[10px]">通常料金(¥)</label>
-            <input type="number" value="${c.priceNormal}" onchange="rawData.courses[${idx}].priceNormal = Number(this.value)" class="w-full p-2 border rounded-lg font-bold">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-xs text-slate-700">コース #${idx + 1}</span>
+            <button onclick="deleteCourse(${idx})" class="text-red-500 text-xs font-bold hover:underline">削除</button>
           </div>
-          <div>
-            <label class="text-slate-400 block text-[10px]">新人料金(¥)</label>
-            <input type="number" value="${c.priceRookie}" onchange="rawData.courses[${idx}].priceRookie = Number(this.value)" class="w-full p-2 border rounded-lg font-bold text-pink-600">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            <div>
+              <label class="text-slate-400 block text-[10px]">コース名 (例: 60分コース)</label>
+              <input type="text" value="${c.name}" onchange="rawData.courses[${idx}].name = this.value" class="w-full p-2 border rounded-lg font-bold">
+            </div>
+            <div>
+              <label class="text-slate-400 block text-[10px]">時間 (分)</label>
+              <input type="number" value="${c.minutes}" onchange="rawData.courses[${idx}].minutes = Number(this.value)" class="w-full p-2 border rounded-lg font-bold">
+            </div>
+            <div>
+              <label class="text-slate-400 block text-[10px]">通常料金 (¥)</label>
+              <input type="number" value="${c.priceNormal}" onchange="rawData.courses[${idx}].priceNormal = Number(this.value)" class="w-full p-2 border rounded-lg font-bold">
+            </div>
+            <div>
+              <label class="text-slate-400 block text-[10px]">新人料金 (¥)</label>
+              <input type="number" value="${c.priceRookie}" onchange="rawData.courses[${idx}].priceRookie = Number(this.value)" class="w-full p-2 border rounded-lg font-bold text-pink-600">
+            </div>
           </div>
         `;
         container.appendChild(div);
       });
+    }
+
+    function addNewCourse() {
+      const newId = 'crs_' + Date.now();
+      rawData.courses.push({
+        id: newId,
+        name: '新設コース',
+        minutes: 60,
+        priceNormal: 15000,
+        priceRookie: 13000
+      });
+      renderCourseEditor();
+    }
+
+    function deleteCourse(idx) {
+      if (confirm('このコースを削除しますか？')) {
+        rawData.courses.splice(idx, 1);
+        renderCourseEditor();
+      }
     }
 
     // --- 保存 ＆ GitHub Commit ---
