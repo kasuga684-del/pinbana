@@ -96,12 +96,12 @@
         <div class="flex justify-between"><span>コース料金:</span><span id="pCourse">¥0</span></div>
         <div class="flex justify-between"><span>本指名料:</span><span id="pNomination">¥0</span></div>
         <div class="flex justify-between"><span>入会金:</span><span id="pAdmission">¥0</span></div>
-        <div class="flex justify-between"><span>ホテル代 (概算):</span><span id="pHotel">¥0</span></div>
       </div>
       <div class="border-t border-slate-100 pt-2 flex justify-between font-bold text-base text-pink-600">
         <span>概算合計金額:</span>
         <span id="pTotal">¥0</span>
       </div>
+      <p class="text-right text-[11px] text-slate-400 font-bold mt-1">※別途ホテル代</p>
     </section>
 
   </main>
@@ -125,8 +125,8 @@
     let selectedCast = null;
     let selectedTime = '';
     let selectedCourse = null;
-    let isNominationRepeat = null; // 初期は未選択 (null)
-    let isFirstVisit = null;       // 初期は未選択 (null)
+    let isNominationRepeat = null;
+    let isFirstVisit = null;
 
     const today = new Date();
 
@@ -200,33 +200,39 @@
 
       const daySchedules = scheduleData.schedules[selectedDate] || {};
 
-      scheduleData.casts.forEach(cast => {
+      // 枠が1つ以上あるキャストのみ抽出（お休みキャストを完全除外）
+      const activeCasts = scheduleData.casts.filter(cast => {
+        const slots = daySchedules[cast.id] || {};
+        return Object.keys(slots).length > 0;
+      });
+
+      if (activeCasts.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 italic bg-white p-4 rounded-xl border border-slate-200 text-center">本日出勤のキャストはございません</p>';
+        return;
+      }
+
+      activeCasts.forEach(cast => {
         const slots = daySchedules[cast.id] || {};
         const timeKeys = Object.keys(slots);
 
         const card = document.createElement('div');
         card.className = 'bg-white rounded-2xl p-4 border border-slate-200 shadow-sm';
 
-        let slotsHtml = '';
-        if (timeKeys.length === 0) {
-          slotsHtml = '<p class="text-xs text-slate-400 italic mt-2">※本日はお休みです</p>';
-        } else {
-          slotsHtml = '<div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar mt-3">';
-          timeKeys.forEach(time => {
-            const status = slots[time];
-            const isSelected = selectedCast?.id === cast.id && selectedTime === time;
-            const isNG = status === 'ng';
+        let slotsHtml = '<div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar mt-3">';
+        timeKeys.forEach(time => {
+          const status = slots[time];
+          const isSelected = selectedCast?.id === cast.id && selectedTime === time;
+          const isNG = status === 'ng';
 
-            slotsHtml += `
-              <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                isNG ? 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-500 scale-105 shadow-md' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-              }">
-                ${status === 'ok' ? '〇 ' : '× '} ${time}
-              </button>
-            `;
-          });
-          slotsHtml += '</div>';
-        }
+          slotsHtml += `
+            <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+              isNG ? 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-500 scale-105 shadow-md' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+            }">
+              ${status === 'ok' ? '〇 ' : '× '} ${time}
+            </button>
+          `;
+        });
+        slotsHtml += '</div>';
 
         card.innerHTML = `
           <div class="flex gap-3 items-center">
@@ -332,16 +338,12 @@
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
       const nominationFee = isNominationRepeat === true ? 1000 : 0;
       const admissionFee = isFirstVisit === true ? 1000 : 0;
-      
-      const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
-      const hotelPrice = hotelObj ? hotelObj.price : 0;
 
-      const total = coursePrice + nominationFee + admissionFee + hotelPrice;
+      const total = coursePrice + nominationFee + admissionFee;
 
       document.getElementById('pCourse').innerText = `¥${coursePrice.toLocaleString()}`;
       document.getElementById('pNomination').innerText = isNominationRepeat === null ? '未選択' : `¥${nominationFee.toLocaleString()}`;
       document.getElementById('pAdmission').innerText = isFirstVisit === null ? '未選択' : `¥${admissionFee.toLocaleString()}`;
-      document.getElementById('pHotel').innerText = `¥${hotelPrice.toLocaleString()}`;
       document.getElementById('pTotal').innerText = `¥${total.toLocaleString()}`;
 
       updateFooter();
@@ -386,9 +388,7 @@
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
       const nominationFee = isNominationRepeat === true ? 1000 : 0;
       const admissionFee = isFirstVisit === true ? 1000 : 0;
-      const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
-      const hotelPrice = hotelObj ? hotelObj.price : 0;
-      const total = coursePrice + nominationFee + admissionFee + hotelPrice;
+      const total = coursePrice + nominationFee + admissionFee;
 
       const messageText = 
 `🌸 WEB予約フォーム 🌸
@@ -404,6 +404,7 @@
 
 【お支払概算合計】
 ¥${total.toLocaleString()}
+※別途ホテル代がかかります
 
 上記の内容で予約のご希望を受け付けました✨
 
