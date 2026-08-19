@@ -64,13 +64,18 @@
   </main>
 
   <script>
-    const GITHUB_REPO = 'kasuga684-del/ピンバナ';
+    const GITHUB_OWNER = 'kasuga684-del';
+    const GITHUB_REPO = 'ピンバナ';
     const FILE_PATH = 'schedule.json';
 
     let rawData = null;
     let fileSha = '';
 
     const todayStr = new Date().toISOString().split('T')[0];
+
+    function getApiUrl() {
+      return `https://api.github.com/repos/${GITHUB_OWNER}/${encodeURIComponent(GITHUB_REPO)}/contents/${FILE_PATH}`;
+    }
 
     window.onload = () => {
       document.getElementById('scheduleDateInput').value = todayStr;
@@ -87,6 +92,7 @@
       const t = document.getElementById('ghToken').value.trim();
       localStorage.setItem('pb_admin_token', t);
       document.getElementById('tokenStatus').innerText = t ? '✅ 保存済み' : '未設定';
+      document.getElementById('tokenStatus').className = t ? 'text-[10px] text-green-600 font-bold' : 'text-[10px] text-slate-400';
     }
 
     function switchTab(tab) {
@@ -102,19 +108,27 @@
       try {
         const token = localStorage.getItem('pb_admin_token');
         const headers = token ? { 'Authorization': `token ${token}` } : {};
-        const res = await fetch(`https://api.github.com/repos/${encodeURI(GITHUB_REPO)}/contents/${FILE_PATH}?t=${Date.now()}`, { headers });
-        const json = await res.json();
-        fileSha = json.sha;
-        rawData = JSON.parse(decodeURIComponent(escape(atob(json.content))));
-        renderScheduleEditor();
-        renderCastEditor();
-        renderCourseEditor();
-      } catch (err) {
+        const res = await fetch(`${getApiUrl()}?t=${Date.now()}`, { headers });
+        if (res.ok) {
+          const json = await res.json();
+          fileSha = json.sha;
+          rawData = JSON.parse(decodeURIComponent(escape(atob(json.content))));
+          renderScheduleEditor();
+          renderCastEditor();
+          renderCourseEditor();
+          return;
+        }
+      } catch (err) {}
+
+      // フォールバック
+      try {
         const res = await fetch(`./schedule.json?t=${Date.now()}`);
         rawData = await res.json();
         renderScheduleEditor();
         renderCastEditor();
         renderCourseEditor();
+      } catch (e) {
+        alert('schedule.json の読み込みに失敗しました');
       }
     }
 
@@ -256,7 +270,7 @@
       }
     }
 
-    // --- TAB 3: コース料金管理（新規追加・削除対応） ---
+    // --- TAB 3: コース料金管理 ---
     function renderCourseEditor() {
       if (!rawData) return;
       const container = document.getElementById('courseList');
@@ -325,6 +339,17 @@
       btn.innerText = '保存中...';
 
       try {
+        // 最新のSHAを取得
+        if (!fileSha) {
+          const checkRes = await fetch(`${getApiUrl()}?t=${Date.now()}`, {
+            headers: { 'Authorization': `token ${token}` }
+          });
+          if (checkRes.ok) {
+            const checkJson = await checkRes.json();
+            fileSha = checkJson.sha;
+          }
+        }
+
         const utf8Content = unescape(encodeURIComponent(JSON.stringify(rawData, null, 2)));
         const base64Content = btoa(utf8Content);
 
@@ -334,7 +359,7 @@
           sha: fileSha
         };
 
-        const res = await fetch(`https://api.github.com/repos/${encodeURI(GITHUB_REPO)}/contents/${FILE_PATH}`, {
+        const res = await fetch(getApiUrl(), {
           method: 'PUT',
           headers: {
             'Authorization': `token ${token}`,
