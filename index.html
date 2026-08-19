@@ -9,7 +9,6 @@
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    html { scroll-behavior: smooth; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-40">
@@ -128,24 +127,19 @@
     let selectedCourse = null;
     let isNominationRepeat = false;
     let isFirstVisit = true;
-    let isLiffInitialized = false;
 
     const today = new Date();
 
-    // LIFF初期化処理
-    window.onload = async function() {
+    // 起動時にLIFFを初期化
+    window.addEventListener('DOMContentLoaded', async () => {
       try {
         await liff.init({ liffId: LIFF_ID });
-        isLiffInitialized = true;
-        if (!liff.isLoggedIn() && liff.isInClient()) {
-          liff.login();
-        }
       } catch (err) {
-        console.error("LIFF Init Error:", err);
+        console.error('LIFF Init Error:', err);
       }
       initDateTabs();
       loadData();
-    };
+    });
 
     function initDateTabs() {
       const container = document.getElementById('dateContainer');
@@ -363,7 +357,7 @@
       }
     }
 
-    // ★画像通りのメッセージを緑色の吹き出しで即時投稿する最終処理
+    // ★自動送信処理
     async function submitReservation() {
       const btn = document.getElementById('nextBtn');
       btn.disabled = true;
@@ -406,18 +400,17 @@
 一言だけで大丈夫ですので、
 忘れずにお願いいたします🙇‍♂️`;
 
-      // LIFFのネイティブメッセージ送信
       if (liff.isInClient()) {
         try {
           await liff.sendMessages([{ type: 'text', text: messageText }]);
-          liff.closeWindow(); // 送信成功後に画面を自動クローズ
+          liff.closeWindow();
         } catch (err) {
-          alert('送信エラーが発生しました。LINEアプリを再起動してお試しください。\n' + err.message);
+          alert('送信エラー: ' + err.message);
           btn.disabled = false;
           btn.innerText = '予約フォームを送信 (LINEヘ) ➔';
         }
       } else {
-        alert('【テスト表示】LINEアプリ内では、画像の緑色吹き出しとしてそのまま自動送信されます:\n\n' + messageText);
+        alert('【テスト表示】LINE内では以下の文章が自動送信されます:\n\n' + messageText);
         btn.disabled = false;
         btn.innerText = '予約フォームを送信 (LINEヘ) ➔';
       }
