@@ -282,9 +282,23 @@
     {
       "id": "crs_1787120869626",
       "name": "90分コース",
-      "minutes": 60,
-      "priceNormal": 15000,
-      "priceRookie": 13000
+      "minutes": 90,
+      "priceNormal": 20000,
+      "priceRookie": 14000
+    },
+    {
+      "id": "crs_1787121415257",
+      "name": "105分コース",
+      "minutes": 105,
+      "priceNormal": 24000,
+      "priceRookie": 18000
+    },
+    {
+      "id": "crs_1787121415719",
+      "name": "120分コース",
+      "minutes": 120,
+      "priceNormal": 28000,
+      "priceRookie": 22000
     }
   ],
   "hotelFees": [
