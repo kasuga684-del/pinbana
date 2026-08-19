@@ -47,12 +47,12 @@
 
       <!-- キャストとのお遊び（本指名選択） -->
       <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-        <label id="castPlayTitle" class="text-xs text-slate-700 font-bold block">〇〇とのお遊び</label>
+        <label id="castPlayTitle" class="text-xs text-slate-700 font-bold block">〇〇とのお遊び <span class="text-pink-500">*</span></label>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="setNomination(false)" id="nomFirstBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-pink-500 bg-pink-50 text-pink-600 shadow-sm">
+          <button type="button" onclick="setNomination(false)" id="nomFirstBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600">
             初めて
           </button>
-          <button type="button" onclick="setNomination(true)" id="nomRepeatBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-500">
+          <button type="button" onclick="setNomination(true)" id="nomRepeatBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600">
             2回目以降
           </button>
         </div>
@@ -65,12 +65,12 @@
       
       <!-- 当店のご利用歴 -->
       <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-        <label class="text-xs text-slate-700 font-bold block">当店のご利用歴</label>
+        <label class="text-xs text-slate-700 font-bold block">当店のご利用歴 <span class="text-pink-500">*</span></label>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="setFirstVisit(true)" id="visitFirstBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-pink-500 bg-pink-50 text-pink-600 shadow-sm">
+          <button type="button" onclick="setFirstVisit(true)" id="visitFirstBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600">
             初めて
           </button>
-          <button type="button" onclick="setFirstVisit(false)" id="visitRepeatBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-500">
+          <button type="button" onclick="setFirstVisit(false)" id="visitRepeatBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600">
             2回目以降
           </button>
         </div>
@@ -80,7 +80,7 @@
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
         <div>
           <label class="text-xs text-slate-500 block mb-1">お名前 (偽名でも可) <span class="text-pink-500">*</span></label>
-          <input type="text" id="custName" oninput="updateCalculation()" placeholder="例: かすが" class="w-full bg-slate-50 text-slate-800 p-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:bg-white focus:border-pink-500 transition-all">
+          <input type="text" id="custName" oninput="updateCalculation()" placeholder="お名前を入力してください" class="w-full bg-slate-50 text-slate-800 p-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:bg-white focus:border-pink-500 transition-all">
         </div>
         <div>
           <label class="text-xs text-slate-500 block mb-1">お電話番号 <span class="text-pink-500">*</span></label>
@@ -125,12 +125,11 @@
     let selectedCast = null;
     let selectedTime = '';
     let selectedCourse = null;
-    let isNominationRepeat = false;
-    let isFirstVisit = true;
+    let isNominationRepeat = null; // 初期は未選択 (null)
+    let isFirstVisit = null;       // 初期は未選択 (null)
 
     const today = new Date();
 
-    // 起動時にLIFFを初期化
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         await liff.init({ liffId: LIFF_ID });
@@ -170,6 +169,9 @@
           selectedCast = null;
           selectedTime = '';
           selectedCourse = null;
+          isNominationRepeat = null;
+          isFirstVisit = null;
+          resetOptionButtons();
           document.getElementById('courseSection').classList.add('hidden');
           document.getElementById('userInfoSection').classList.add('hidden');
           document.getElementById('priceBreakdownSection').classList.add('hidden');
@@ -247,8 +249,11 @@
       selectedCast = scheduleData.casts.find(c => c.id === castId);
       selectedTime = time;
       selectedCourse = null;
+      isNominationRepeat = null;
+      isFirstVisit = null;
+      resetOptionButtons();
 
-      document.getElementById('castPlayTitle').innerText = `${selectedCast.name}とのお遊び`;
+      document.getElementById('castPlayTitle').innerText = `${selectedCast.name}とのお遊び *`;
 
       const courseSec = document.getElementById('courseSection');
       courseSec.classList.remove('hidden');
@@ -263,6 +268,13 @@
         const y = courseSec.getBoundingClientRect().top + window.pageYOffset + yOffset;
         window.scrollTo({ top: y, behavior: 'smooth' });
       }, 100);
+    }
+
+    function resetOptionButtons() {
+      document.getElementById('nomFirstBtn').className = 'p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600';
+      document.getElementById('nomRepeatBtn').className = 'p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600';
+      document.getElementById('visitFirstBtn').className = 'p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600';
+      document.getElementById('visitRepeatBtn').className = 'p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600';
     }
 
     function renderCourses() {
@@ -296,15 +308,15 @@
 
     function setNomination(isRepeat) {
       isNominationRepeat = isRepeat;
-      document.getElementById('nomFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500'}`;
-      document.getElementById('nomRepeatBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500'}`;
+      document.getElementById('nomFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
+      document.getElementById('nomRepeatBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
       updateCalculation();
     }
 
     function setFirstVisit(val) {
       isFirstVisit = val;
-      document.getElementById('visitFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${val ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500'}`;
-      document.getElementById('visitRepeatBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!val ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500'}`;
+      document.getElementById('visitFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${val ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
+      document.getElementById('visitRepeatBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!val ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
       updateCalculation();
     }
 
@@ -318,8 +330,8 @@
       document.getElementById('priceBreakdownSection').classList.remove('hidden');
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = isNominationRepeat ? 1000 : 0;
-      const admissionFee = isFirstVisit ? 1000 : 0;
+      const nominationFee = isNominationRepeat === true ? 1000 : 0;
+      const admissionFee = isFirstVisit === true ? 1000 : 0;
       
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
@@ -327,8 +339,8 @@
       const total = coursePrice + nominationFee + admissionFee + hotelPrice;
 
       document.getElementById('pCourse').innerText = `¥${coursePrice.toLocaleString()}`;
-      document.getElementById('pNomination').innerText = `¥${nominationFee.toLocaleString()}`;
-      document.getElementById('pAdmission').innerText = `¥${admissionFee.toLocaleString()}`;
+      document.getElementById('pNomination').innerText = isNominationRepeat === null ? '未選択' : `¥${nominationFee.toLocaleString()}`;
+      document.getElementById('pAdmission').innerText = isFirstVisit === null ? '未選択' : `¥${admissionFee.toLocaleString()}`;
       document.getElementById('pHotel').innerText = `¥${hotelPrice.toLocaleString()}`;
       document.getElementById('pTotal').innerText = `¥${total.toLocaleString()}`;
 
@@ -342,22 +354,27 @@
       const name = document.getElementById('custName')?.value.trim();
       const phone = document.getElementById('custPhone')?.value.trim();
 
-      if (selectedCast && selectedTime && selectedCourse && name && phone) {
-        text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourse.name})`;
-        btn.disabled = false;
-      } else if (selectedCast && selectedTime && selectedCourse) {
-        text.innerText = `お名前・電話番号を入力してください`;
-        btn.disabled = true;
-      } else if (selectedCast && selectedTime) {
-        text.innerText = `${selectedCast.name} ${selectedTime}~ (コース未選択)`;
-        btn.disabled = true;
-      } else {
+      if (!selectedCast || !selectedTime) {
         text.innerText = '未選択';
         btn.disabled = true;
+      } else if (!selectedCourse) {
+        text.innerText = `${selectedCast.name} ${selectedTime}~ (コース未選択)`;
+        btn.disabled = true;
+      } else if (isNominationRepeat === null) {
+        text.innerText = `「${selectedCast.name}とのお遊び」を選択してください`;
+        btn.disabled = true;
+      } else if (isFirstVisit === null) {
+        text.innerText = `「当店のご利用歴」を選択してください`;
+        btn.disabled = true;
+      } else if (!name || !phone) {
+        text.innerText = `お名前・電話番号を入力してください`;
+        btn.disabled = true;
+      } else {
+        text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourse.name})`;
+        btn.disabled = false;
       }
     }
 
-    // ★自動送信処理
     async function submitReservation() {
       const btn = document.getElementById('nextBtn');
       btn.disabled = true;
@@ -367,8 +384,8 @@
       const phone = document.getElementById('custPhone').value.trim();
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
-      const nominationFee = isNominationRepeat ? 1000 : 0;
-      const admissionFee = isFirstVisit ? 1000 : 0;
+      const nominationFee = isNominationRepeat === true ? 1000 : 0;
+      const admissionFee = isFirstVisit === true ? 1000 : 0;
       const hotelObj = scheduleData.hotelFees.find(h => h.minutes === selectedCourse.minutes);
       const hotelPrice = hotelObj ? hotelObj.price : 0;
       const total = coursePrice + nominationFee + admissionFee + hotelPrice;
