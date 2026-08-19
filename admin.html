@@ -52,7 +52,7 @@
       <div id="castList" class="space-y-4"></div>
     </section>
 
-    <!-- TAB 3: コース料金管理（コース名欄を削除） -->
+    <!-- TAB 3: コース料金管理 -->
     <section id="secCourses" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-4 hidden">
       <div class="flex justify-between items-center">
         <h2 class="text-xs font-bold text-slate-500">コース・料金設定</h2>
@@ -241,29 +241,25 @@
             <button onclick="deleteCast(${idx})" class="text-red-500 text-xs font-bold hover:underline">削除</button>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <div><label class="text-slate-400 block mb-0.5">名前</label><input type="text" value="${cast.name}" onchange="updateCast(${idx}, 'name', this.value)" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">年齢</label><input type="text" value="${cast.age}" onchange="updateCast(${idx}, 'age', this.value)" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">身長</label><input type="text" value="${cast.height}" onchange="updateCast(${idx}, 'height', this.value)" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">カップ</label><input type="text" value="${cast.cup}" onchange="updateCast(${idx}, 'cup', this.value)" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">バスト</label><input type="text" value="${cast.bust}" onchange="updateCast(${idx}, 'bust', this.value)" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">ウエスト</label><input type="text" value="${cast.waist}" onchange="updateCast(${idx}, 'waist', this.value)" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">ヒップ</label><input type="text" value="${cast.hip}" onchange="updateCast(${idx}, 'hip', this.value)" class="w-full p-2 border rounded-lg"></div>
+            <div><label class="text-slate-400 block mb-0.5">名前</label><input type="text" value="${cast.name}" oninput="rawData.casts[${idx}].name = this.value" class="w-full p-2 border rounded-lg"></div>
+            <div><label class="text-slate-400 block mb-0.5">年齢</label><input type="text" value="${cast.age}" oninput="rawData.casts[${idx}].age = this.value" class="w-full p-2 border rounded-lg"></div>
+            <div><label class="text-slate-400 block mb-0.5">身長</label><input type="text" value="${cast.height}" oninput="rawData.casts[${idx}].height = this.value" class="w-full p-2 border rounded-lg"></div>
+            <div><label class="text-slate-400 block mb-0.5">カップ</label><input type="text" value="${cast.cup}" oninput="rawData.casts[${idx}].cup = this.value" class="w-full p-2 border rounded-lg"></div>
+            <div><label class="text-slate-400 block mb-0.5">バスト</label><input type="text" value="${cast.bust}" oninput="rawData.casts[${idx}].bust = this.value" class="w-full p-2 border rounded-lg"></div>
+            <div><label class="text-slate-400 block mb-0.5">ウエスト</label><input type="text" value="${cast.waist}" oninput="rawData.casts[${idx}].waist = this.value" class="w-full p-2 border rounded-lg"></div>
+            <div><label class="text-slate-400 block mb-0.5">ヒップ</label><input type="text" value="${cast.hip}" oninput="rawData.casts[${idx}].hip = this.value" class="w-full p-2 border rounded-lg"></div>
             <div class="flex items-center gap-2 pt-4">
-              <input type="checkbox" ${cast.isRookie ? 'checked' : ''} onchange="updateCast(${idx}, 'isRookie', this.checked)" id="rookie_${idx}">
+              <input type="checkbox" ${cast.isRookie ? 'checked' : ''} onchange="rawData.casts[${idx}].isRookie = this.checked" id="rookie_${idx}">
               <label for="rookie_${idx}" class="font-bold text-pink-600">新人フラグ</label>
             </div>
           </div>
           <div>
             <label class="text-slate-400 block text-xs mb-0.5">写真URL</label>
-            <input type="text" value="${cast.photo}" onchange="updateCast(${idx}, 'photo', this.value)" class="w-full p-2 border rounded-lg text-xs">
+            <input type="text" value="${cast.photo}" oninput="rawData.casts[${idx}].photo = this.value" class="w-full p-2 border rounded-lg text-xs">
           </div>
         `;
         container.appendChild(div);
       });
-    }
-
-    function updateCast(idx, key, val) {
-      rawData.casts[idx][key] = val;
     }
 
     function addNewCast() {
@@ -291,7 +287,7 @@
       }
     }
 
-    // --- TAB 3: コース料金管理（時間・通常料金・新人料金の3項目） ---
+    // --- TAB 3: コース料金管理（即時値反映） ---
     function renderCourseEditor() {
       if (!rawData || !rawData.courses) return;
       const container = document.getElementById('courseList');
@@ -308,15 +304,15 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
             <div>
               <label class="text-slate-400 block text-[10px]">時間 (分)</label>
-              <input type="number" value="${c.minutes}" onchange="updateCourseMinutes(${idx}, this.value)" class="w-full p-2 border rounded-lg font-bold">
+              <input type="number" value="${c.minutes}" oninput="updateCourseMinutes(${idx}, this.value)" class="w-full p-2 border rounded-lg font-bold">
             </div>
             <div>
               <label class="text-slate-400 block text-[10px]">通常料金 (¥)</label>
-              <input type="number" value="${c.priceNormal}" onchange="rawData.courses[${idx}].priceNormal = Number(this.value)" class="w-full p-2 border rounded-lg font-bold">
+              <input type="number" value="${c.priceNormal}" oninput="rawData.courses[${idx}].priceNormal = Number(this.value)" class="w-full p-2 border rounded-lg font-bold">
             </div>
             <div>
               <label class="text-slate-400 block text-[10px]">新人料金 (¥)</label>
-              <input type="number" value="${c.priceRookie}" onchange="rawData.courses[${idx}].priceRookie = Number(this.value)" class="w-full p-2 border rounded-lg font-bold text-pink-600">
+              <input type="number" value="${c.priceRookie}" oninput="rawData.courses[${idx}].priceRookie = Number(this.value)" class="w-full p-2 border rounded-lg font-bold text-pink-600">
             </div>
           </div>
         `;
@@ -328,7 +324,6 @@
       const min = Number(val);
       rawData.courses[idx].minutes = min;
       rawData.courses[idx].name = `${min}分コース`;
-      renderCourseEditor();
     }
 
     function addNewCourse() {
@@ -373,9 +368,9 @@
         
         if (!checkRes.ok) {
           if (checkRes.status === 401 || checkRes.status === 403) {
-            throw new Error('トークンが無効または期限切れです。GitHubで再度トークンを発行してください。');
+            throw new Error('トークンが無効または期限切れです。');
           }
-          throw new Error('ファイルの取得に失敗しました (ステータス: ' + checkRes.status + ')');
+          throw new Error('ファイル情報の取得に失敗しました');
         }
 
         const checkJson = await checkRes.json();
@@ -385,7 +380,7 @@
         const base64Content = utf8ToBase64(jsonString);
 
         const body = {
-          message: '管理者ダッシュボードからデータを更新',
+          message: 'コース・シフト設定を更新',
           content: base64Content,
           sha: fileSha,
           branch: BRANCH
