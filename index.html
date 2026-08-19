@@ -120,6 +120,17 @@
   <script>
     const LIFF_ID = '2010290704-NS1l65Na';
 
+    // 定義通りの時間順（ソート基準）
+    const TIME_ORDER = [
+      '10:00','10:30','11:00','11:30',
+      '12:00','12:30','13:00','13:30',
+      '14:00','14:30','15:00','15:30',
+      '16:00','16:30','17:00','17:30',
+      '18:00','18:30','19:00','19:30',
+      '20:00','20:30','21:00','21:30',
+      '22:00','22:30','23:00'
+    ];
+
     let scheduleData = null;
     let selectedDate = '';
     let selectedCast = null;
@@ -184,7 +195,6 @@
     }
 
     async function loadData() {
-      // 1. GitHub APIから直接最新データを取得（Pagesのキャッシュ遅延を完全回避）
       try {
         const res = await fetch(`https://api.github.com/repos/kasuga684-del/pinbana/contents/schedule.json?ref=main&t=${Date.now()}`, {
           headers: { 'Accept': 'application/vnd.github.v3+json' }
@@ -200,7 +210,6 @@
         }
       } catch (err) {}
 
-      // 2. フォールバック
       try {
         const res = await fetch('./schedule.json?t=' + Date.now());
         scheduleData = await res.json();
@@ -229,7 +238,14 @@
 
       activeCasts.forEach(cast => {
         const slots = daySchedules[cast.id] || {};
-        const timeKeys = Object.keys(slots);
+        
+        // ★時間を必ず「10:00 → 10:30 → 11:00 ...」の昇順に並び替え
+        const timeKeys = Object.keys(slots).sort((a, b) => {
+          const idxA = TIME_ORDER.indexOf(a);
+          const idxB = TIME_ORDER.indexOf(b);
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          return a.localeCompare(b);
+        });
 
         const card = document.createElement('div');
         card.className = 'bg-white rounded-2xl p-4 border border-slate-200 shadow-sm';
@@ -310,7 +326,10 @@
         rookieBadge.classList.add('hidden');
       }
 
-      scheduleData.courses.forEach(c => {
+      // コースも分数順（短い順）に整列
+      const sortedCourses = [...scheduleData.courses].sort((a, b) => a.minutes - b.minutes);
+
+      sortedCourses.forEach(c => {
         const price = selectedCast.isRookie ? c.priceRookie : c.priceNormal;
         const isSelected = selectedCourse?.id === c.id;
 
