@@ -260,10 +260,10 @@
   "courses": [
     {
       "id": "c60",
-      "name": "60分コース",
-      "minutes": 60,
-      "priceNormal": 12000,
-      "priceRookie": 8000
+      "name": "45分コース",
+      "minutes": 45,
+      "priceNormal": 9000,
+      "priceRookie": 5000
     }
   ],
   "hotelFees": [
