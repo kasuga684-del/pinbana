@@ -3,16 +3,16 @@
   "casts": [
     {
       "id": "cast_01",
-      "name": "せん",
+      "name": "ちか",
       "age": 24,
       "tag": "ご奉仕型",
       "photo": "https://pinkbanana.jp/upload/cast/9_17804565204.jpg?1780456523",
       "nominationFee": 3000,
-      "height": 160,
-      "bust": 85,
-      "cup": "D",
-      "waist": 58,
-      "hip": 86
+      "height": "166",
+      "bust": "91",
+      "cup": "G",
+      "waist": "59",
+      "hip": "90"
     },
     {
       "id": "cast_02",
