@@ -304,7 +304,7 @@
           isSelected ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
         }`;
         btn.innerHTML = `
-          <div class="text-xs text-pink-600">${c.name} (${c.minutes}分)</div>
+          <div class="text-xs text-pink-600">${c.minutes}分コース</div>
           <div class="text-sm mt-0.5 font-bold">¥${price.toLocaleString()}</div>
         `;
         container.appendChild(btn);
@@ -371,7 +371,7 @@
         text.innerText = `お名前・電話番号を入力してください`;
         btn.disabled = true;
       } else {
-        text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourse.name})`;
+        text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourse.minutes}分コース)`;
         btn.disabled = false;
       }
     }
@@ -389,7 +389,6 @@
       const admissionFee = isFirstVisit === true ? 1000 : 0;
       const total = coursePrice + nominationFee + admissionFee;
 
-      // ★指定通りのメッセージ文章フォーマット
       const messageText = 
 `WEB予約フォーム 
 送信ありがとうございます！
@@ -400,7 +399,7 @@
 
 ご希望日時：${selectedDate} ${selectedTime}〜
 指名キャスト：${selectedCast.name} (${isNominationRepeat ? '指名2回目以降' : '指名初めて'})
-選択コース：${selectedCourse.name}
+選択コース：${selectedCourse.minutes}分コース
 
 【お支払概算合計】
 ¥${total.toLocaleString()}
