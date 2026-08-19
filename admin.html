@@ -23,11 +23,11 @@
         <label class="text-xs font-bold text-slate-600">🔑 GitHub Personal Access Token (初回のみ)</label>
         <span id="tokenStatus" class="text-[10px] text-slate-400">未設定</span>
       </div>
-      <input type="password" id="ghToken" onchange="saveToken()" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-pink-500">
+      <input type="password" id="ghToken" oninput="saveToken()" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-pink-500">
       <p class="text-[10px] text-slate-400">※ブラウザ内にのみ保存されます。GitHubの `repo` 権限を持つトークンを入力してください。</p>
     </div>
 
-    <!-- タブ切り替え（左揃え） -->
+    <!-- タブ切り替え -->
     <div class="flex justify-start border-b border-slate-200 bg-white rounded-t-2xl px-4 pt-2 gap-2 text-xs font-bold">
       <button onclick="switchTab('schedule')" id="tabSchedule" class="px-4 py-2.5 text-pink-600 border-b-2 border-pink-500">📅 出勤・空き枠管理</button>
       <button onclick="switchTab('casts')" id="tabCasts" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">👤 キャスト登録・編集</button>
@@ -65,7 +65,7 @@
 
   <script>
     const GITHUB_OWNER = 'kasuga684-del';
-    const GITHUB_REPO = 'ピンバナ';
+    const GITHUB_REPO = 'pinbana';
     const FILE_PATH = 'schedule.json';
 
     let rawData = null;
@@ -74,7 +74,7 @@
     const todayStr = new Date().toISOString().split('T')[0];
 
     function getApiUrl() {
-      return `https://api.github.com/repos/${GITHUB_OWNER}/${encodeURIComponent(GITHUB_REPO)}/contents/${FILE_PATH}`;
+      return `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
     }
 
     window.onload = () => {
@@ -107,7 +107,7 @@
     async function fetchData() {
       try {
         const token = localStorage.getItem('pb_admin_token');
-        const headers = token ? { 'Authorization': `token ${token}` } : {};
+        const headers = token ? { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } : { 'Accept': 'application/vnd.github.v3+json' };
         const res = await fetch(`${getApiUrl()}?t=${Date.now()}`, { headers });
         if (res.ok) {
           const json = await res.json();
@@ -120,7 +120,6 @@
         }
       } catch (err) {}
 
-      // フォールバック
       try {
         const res = await fetch(`./schedule.json?t=${Date.now()}`);
         rawData = await res.json();
@@ -339,15 +338,20 @@
       btn.innerText = '保存中...';
 
       try {
-        // 最新のSHAを取得
-        if (!fileSha) {
-          const checkRes = await fetch(`${getApiUrl()}?t=${Date.now()}`, {
-            headers: { 'Authorization': `token ${token}` }
-          });
-          if (checkRes.ok) {
-            const checkJson = await checkRes.json();
-            fileSha = checkJson.sha;
+        const checkRes = await fetch(`${getApiUrl()}?t=${Date.now()}`, {
+          headers: { 
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
           }
+        });
+        
+        if (checkRes.ok) {
+          const checkJson = await checkRes.json();
+          fileSha = checkJson.sha;
+        } else if (checkRes.status === 401 || checkRes.status === 403) {
+          throw new Error('トークンが無効または期限切れです。新しいトークンを再設定してください。');
+        } else if (checkRes.status === 404) {
+          throw new Error('リポジトリまたはファイルが見つかりません。');
         }
 
         const utf8Content = unescape(encodeURIComponent(JSON.stringify(rawData, null, 2)));
@@ -363,6 +367,7 @@
           method: 'PUT',
           headers: {
             'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(body)
