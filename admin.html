@@ -20,11 +20,11 @@
     <!-- GitHub Token 設定 -->
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
       <div class="flex justify-between items-center">
-        <label class="text-xs font-bold text-slate-600">🔑 GitHub Personal Access Token (初回のみ)</label>
+        <label class="text-xs font-bold text-slate-600">🔑 GitHub Personal Access Token</label>
         <span id="tokenStatus" class="text-[10px] text-slate-400">未設定</span>
       </div>
-      <input type="password" id="ghToken" oninput="saveToken()" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-pink-500">
-      <p class="text-[10px] text-slate-400">※ブラウザ内にのみ保存されます。GitHubの `repo` 権限を持つトークンを入力してください。</p>
+      <input type="password" id="ghToken" oninput="saveToken()" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-pink-500 font-mono">
+      <p class="text-[10px] text-slate-400">※GitHubの「repo」権限を持つトークンを入力してください。</p>
     </div>
 
     <!-- タブ切り替え -->
@@ -52,7 +52,7 @@
       <div id="castList" class="space-y-4"></div>
     </section>
 
-    <!-- TAB 3: コース料金管理 -->
+    <!-- TAB 3: コース料金管理（コース名欄を削除） -->
     <section id="secCourses" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-4 hidden">
       <div class="flex justify-between items-center">
         <h2 class="text-xs font-bold text-slate-500">コース・料金設定</h2>
@@ -67,6 +67,7 @@
     const GITHUB_OWNER = 'kasuga684-del';
     const GITHUB_REPO = 'pinbana';
     const FILE_PATH = 'schedule.json';
+    const BRANCH = 'main';
 
     let rawData = null;
     let fileSha = '';
@@ -77,12 +78,30 @@
       return `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
     }
 
+    function utf8ToBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    function base64ToUtf8(base64) {
+      const binary = atob(base64.replace(/\s/g, ''));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
+    }
+
     window.onload = () => {
       document.getElementById('scheduleDateInput').value = todayStr;
       const savedToken = localStorage.getItem('pb_admin_token');
       if (savedToken) {
         document.getElementById('ghToken').value = savedToken;
-        document.getElementById('tokenStatus').innerText = '✅ 保存済み';
+        document.getElementById('tokenStatus').innerText = '✅ 設定済み';
         document.getElementById('tokenStatus').className = 'text-[10px] text-green-600 font-bold';
       }
       fetchData();
@@ -91,7 +110,7 @@
     function saveToken() {
       const t = document.getElementById('ghToken').value.trim();
       localStorage.setItem('pb_admin_token', t);
-      document.getElementById('tokenStatus').innerText = t ? '✅ 保存済み' : '未設定';
+      document.getElementById('tokenStatus').innerText = t ? '✅ 設定済み' : '未設定';
       document.getElementById('tokenStatus').className = t ? 'text-[10px] text-green-600 font-bold' : 'text-[10px] text-slate-400';
     }
 
@@ -105,14 +124,15 @@
     }
 
     async function fetchData() {
+      const token = localStorage.getItem('pb_admin_token');
+      const headers = token ? { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } : { 'Accept': 'application/vnd.github.v3+json' };
+
       try {
-        const token = localStorage.getItem('pb_admin_token');
-        const headers = token ? { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } : { 'Accept': 'application/vnd.github.v3+json' };
-        const res = await fetch(`${getApiUrl()}?t=${Date.now()}`, { headers });
+        const res = await fetch(`${getApiUrl()}?ref=${BRANCH}&t=${Date.now()}`, { headers });
         if (res.ok) {
           const json = await res.json();
           fileSha = json.sha;
-          rawData = JSON.parse(decodeURIComponent(escape(atob(json.content))));
+          rawData = JSON.parse(base64ToUtf8(json.content));
           renderScheduleEditor();
           renderCastEditor();
           renderCourseEditor();
@@ -138,6 +158,7 @@
       const container = document.getElementById('scheduleGrid');
       container.innerHTML = '';
 
+      if (!rawData.schedules) rawData.schedules = {};
       if (!rawData.schedules[date]) rawData.schedules[date] = {};
 
       rawData.casts.forEach(cast => {
@@ -207,7 +228,7 @@
 
     // --- TAB 2: キャスト管理 ---
     function renderCastEditor() {
-      if (!rawData) return;
+      if (!rawData || !rawData.casts) return;
       const container = document.getElementById('castList');
       container.innerHTML = '';
 
@@ -247,6 +268,7 @@
 
     function addNewCast() {
       const newId = 'c' + Date.now();
+      if (!rawData.casts) rawData.casts = [];
       rawData.casts.push({
         id: newId,
         name: '新規キャスト',
@@ -269,9 +291,9 @@
       }
     }
 
-    // --- TAB 3: コース料金管理 ---
+    // --- TAB 3: コース料金管理（時間・通常料金・新人料金の3項目） ---
     function renderCourseEditor() {
-      if (!rawData) return;
+      if (!rawData || !rawData.courses) return;
       const container = document.getElementById('courseList');
       container.innerHTML = '';
 
@@ -280,17 +302,13 @@
         div.className = 'border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3';
         div.innerHTML = `
           <div class="flex justify-between items-center">
-            <span class="font-bold text-xs text-slate-700">コース #${idx + 1}</span>
+            <span class="font-bold text-xs text-slate-700">コース #${idx + 1} (${c.minutes}分)</span>
             <button onclick="deleteCourse(${idx})" class="text-red-500 text-xs font-bold hover:underline">削除</button>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
             <div>
-              <label class="text-slate-400 block text-[10px]">コース名 (例: 60分コース)</label>
-              <input type="text" value="${c.name}" onchange="rawData.courses[${idx}].name = this.value" class="w-full p-2 border rounded-lg font-bold">
-            </div>
-            <div>
               <label class="text-slate-400 block text-[10px]">時間 (分)</label>
-              <input type="number" value="${c.minutes}" onchange="rawData.courses[${idx}].minutes = Number(this.value)" class="w-full p-2 border rounded-lg font-bold">
+              <input type="number" value="${c.minutes}" onchange="updateCourseMinutes(${idx}, this.value)" class="w-full p-2 border rounded-lg font-bold">
             </div>
             <div>
               <label class="text-slate-400 block text-[10px]">通常料金 (¥)</label>
@@ -306,11 +324,19 @@
       });
     }
 
+    function updateCourseMinutes(idx, val) {
+      const min = Number(val);
+      rawData.courses[idx].minutes = min;
+      rawData.courses[idx].name = `${min}分コース`;
+      renderCourseEditor();
+    }
+
     function addNewCourse() {
       const newId = 'crs_' + Date.now();
+      if (!rawData.courses) rawData.courses = [];
       rawData.courses.push({
         id: newId,
-        name: '新設コース',
+        name: '60分コース',
         minutes: 60,
         priceNormal: 15000,
         priceRookie: 13000
@@ -338,29 +364,31 @@
       btn.innerText = '保存中...';
 
       try {
-        const checkRes = await fetch(`${getApiUrl()}?t=${Date.now()}`, {
+        const checkRes = await fetch(`${getApiUrl()}?ref=${BRANCH}&t=${Date.now()}`, {
           headers: { 
             'Authorization': `token ${token}`,
             'Accept': 'application/vnd.github.v3+json'
           }
         });
         
-        if (checkRes.ok) {
-          const checkJson = await checkRes.json();
-          fileSha = checkJson.sha;
-        } else if (checkRes.status === 401 || checkRes.status === 403) {
-          throw new Error('トークンが無効または期限切れです。新しいトークンを再設定してください。');
-        } else if (checkRes.status === 404) {
-          throw new Error('リポジトリまたはファイルが見つかりません。');
+        if (!checkRes.ok) {
+          if (checkRes.status === 401 || checkRes.status === 403) {
+            throw new Error('トークンが無効または期限切れです。GitHubで再度トークンを発行してください。');
+          }
+          throw new Error('ファイルの取得に失敗しました (ステータス: ' + checkRes.status + ')');
         }
 
-        const utf8Content = unescape(encodeURIComponent(JSON.stringify(rawData, null, 2)));
-        const base64Content = btoa(utf8Content);
+        const checkJson = await checkRes.json();
+        fileSha = checkJson.sha;
+
+        const jsonString = JSON.stringify(rawData, null, 2);
+        const base64Content = utf8ToBase64(jsonString);
 
         const body = {
           message: '管理者ダッシュボードからデータを更新',
           content: base64Content,
-          sha: fileSha
+          sha: fileSha,
+          branch: BRANCH
         };
 
         const res = await fetch(getApiUrl(), {
@@ -374,13 +402,13 @@
         });
 
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.message || '保存に失敗しました');
+          const errJson = await res.json();
+          throw new Error(errJson.message || '保存に失敗しました');
         }
 
         const resJson = await res.json();
         fileSha = resJson.content.sha;
-        alert('✅ 変更をGitHubへ保存・反映しました！');
+        alert('✅ 変更をGitHubへ保存しました！');
       } catch (err) {
         alert('❌ 保存エラー: ' + err.message);
       } finally {
