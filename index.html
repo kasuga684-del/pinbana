@@ -200,7 +200,6 @@
 
       const daySchedules = scheduleData.schedules[selectedDate] || {};
 
-      // 枠が1つ以上あるキャストのみ抽出（お休みキャストを完全除外）
       const activeCasts = scheduleData.casts.filter(cast => {
         const slots = daySchedules[cast.id] || {};
         return Object.keys(slots).length > 0;
@@ -390,8 +389,9 @@
       const admissionFee = isFirstVisit === true ? 1000 : 0;
       const total = coursePrice + nominationFee + admissionFee;
 
+      // ★指定通りのメッセージ文章フォーマット
       const messageText = 
-`🌸 WEB予約フォーム 🌸
+`WEB予約フォーム 
 送信ありがとうございます！
 
 お名前：${name}
@@ -406,17 +406,15 @@
 ¥${total.toLocaleString()}
 ※別途ホテル代がかかります
 
-上記の内容で予約のご希望を受け付けました✨
+上記の内容で予約のご希望を受け付けました
 
-※重要※
-予約日時を確定するために、
-必ずこのLINEのトークに直接「予約希望」と送ってください✨
+※まだ予約は確定しておりません※
 
-こちらのメッセージを頂けないと、
-予約日時をご案内することができない仕組みになっています💦
+ワンオペ店長が空き状況を確認の上、
+折り返し「予約確定メッセージ」をお送りいたします✨
 
-一言だけで大丈夫ですので、
-忘れずにお願いいたします🙇‍♂️`;
+混雑状況によりご希望に添えない場合もございますので、
+ワンオペ店長からの返信を今しばらくお待ちくださいませ🙇‍♂️`;
 
       if (liff.isInClient()) {
         try {
