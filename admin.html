@@ -34,7 +34,7 @@
       <button onclick="switchTab('courses')" id="tabCourses" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">⏱ コース・料金設定</button>
     </div>
 
-    <!-- TAB 1: シフト管理 -->
+    <!-- TAB 1: シフト管理（10:00〜23:00対応） -->
     <section id="secSchedule" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-4">
       <div class="flex gap-2 items-center">
         <label class="text-xs font-bold text-slate-500">日付を選択:</label>
@@ -68,6 +68,17 @@
     const GITHUB_REPO = 'pinbana';
     const FILE_PATH = 'schedule.json';
     const BRANCH = 'main';
+
+    // 10:00 〜 23:00 までの時間枠リスト
+    const TIME_LIST = [
+      '10:00','10:30','11:00','11:30',
+      '12:00','12:30','13:00','13:30',
+      '14:00','14:30','15:00','15:30',
+      '16:00','16:30','17:00','17:30',
+      '18:00','18:30','19:00','19:30',
+      '20:00','20:30','21:00','21:30',
+      '22:00','22:30','23:00'
+    ];
 
     let rawData = null;
     let fileSha = '';
@@ -167,9 +178,8 @@
         card.className = 'border border-slate-200 rounded-2xl p-4 space-y-3 bg-slate-50';
 
         let slotBtns = '';
-        const timeList = ['12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00'];
 
-        timeList.forEach(t => {
+        TIME_LIST.forEach(t => {
           const status = currentSlots[t];
           let color = 'bg-white border-slate-200 text-slate-400';
           let label = '-';
@@ -177,9 +187,9 @@
           if (status === 'ng') { color = 'bg-red-500 text-white border-red-600 font-bold'; label = '×'; }
 
           slotBtns += `
-            <button onclick="toggleSlot('${date}', '${cast.id}', '${t}')" class="px-2 py-1.5 rounded-lg border text-[11px] flex flex-col items-center justify-center transition-all ${color}">
-              <span>${t}</span>
-              <span class="text-xs">${label}</span>
+            <button onclick="toggleSlot('${date}', '${cast.id}', '${t}')" class="px-1.5 py-1.5 rounded-lg border text-[11px] flex flex-col items-center justify-center transition-all ${color}">
+              <span class="font-medium">${t}</span>
+              <span class="text-xs font-bold">${label}</span>
             </button>
           `;
         });
@@ -196,7 +206,7 @@
               <button onclick="clearAllSlots('${date}', '${cast.id}')" class="px-2.5 py-1 bg-slate-200 border border-slate-300 text-slate-600 rounded-lg font-bold hover:bg-slate-300">お休み (クリア)</button>
             </div>
           </div>
-          <div class="grid grid-cols-6 sm:grid-cols-8 gap-1.5">
+          <div class="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-9 gap-1.5">
             ${slotBtns}
           </div>
         `;
@@ -215,7 +225,7 @@
 
     function setAllSlots(date, castId, status) {
       if (!rawData.schedules[date][castId]) rawData.schedules[date][castId] = {};
-      ['12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00'].forEach(t => {
+      TIME_LIST.forEach(t => {
         rawData.schedules[date][castId][t] = status;
       });
       renderScheduleEditor();
@@ -287,7 +297,7 @@
       }
     }
 
-    // --- TAB 3: コース料金管理（即時値反映） ---
+    // --- TAB 3: コース料金管理 ---
     function renderCourseEditor() {
       if (!rawData || !rawData.courses) return;
       const container = document.getElementById('courseList');
