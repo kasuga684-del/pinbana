@@ -25,6 +25,18 @@
       "hip": "86",
       "photo": "https://pinkbanana.jp/upload/cast/10_17800163095.jpg?1780016310",
       "isRookie": false
+    },
+    {
+      "id": "c1787122603743",
+      "name": "みるく",
+      "age": "25",
+      "height": "146",
+      "bust": "94",
+      "cup": "H",
+      "waist": 58,
+      "hip": "85",
+      "photo": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60",
+      "isRookie": true
     }
   ],
   "schedules": {
