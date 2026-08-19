@@ -184,6 +184,23 @@
     }
 
     async function loadData() {
+      // 1. GitHub APIから直接最新データを取得（Pagesのキャッシュ遅延を完全回避）
+      try {
+        const res = await fetch(`https://api.github.com/repos/kasuga684-del/pinbana/contents/schedule.json?ref=main&t=${Date.now()}`, {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const binary = atob(json.content.replace(/\s/g, ''));
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          scheduleData = JSON.parse(new TextDecoder().decode(bytes));
+          renderCastList();
+          return;
+        }
+      } catch (err) {}
+
+      // 2. フォールバック
       try {
         const res = await fetch('./schedule.json?t=' + Date.now());
         scheduleData = await res.json();
