@@ -132,7 +132,6 @@
         <div class="flex justify-between" id="rowOptionWrap"><span>オプション料金:</span><span id="pOption">¥0</span></div>
         <div class="flex justify-between"><span>本指名料:</span><span id="pNomination">¥0</span></div>
         <div class="flex justify-between"><span>入会金:</span><span id="pAdmission">¥0</span></div>
-        <!-- オープン記念割引表示 -->
         <div class="flex justify-between text-green-600 font-bold" id="rowDiscountWrap"><span>🎉 オープン記念割引:</span><span id="pDiscount">-¥3,000</span></div>
       </div>
       <div class="border-t border-slate-100 pt-2 flex justify-between font-bold text-base text-pink-600">
@@ -265,6 +264,18 @@
 
       const daySchedules = scheduleData.schedules[selectedDate] || {};
 
+      // 現在の日付・時刻の取得
+      const now = new Date();
+      const todayYear = now.getFullYear();
+      const todayMonth = String(now.getMonth() + 1).padStart(2, '0');
+      const todayDay = String(now.getDate()).padStart(2, '0');
+      const todayStr = `${todayYear}-${todayMonth}-${todayDay}`;
+      const isToday = (selectedDate === todayStr);
+
+      const curHour = now.getHours();
+      const curMinute = now.getMinutes();
+
+      // 出勤登録があるキャスト
       const activeCasts = scheduleData.casts.filter(cast => {
         const slots = daySchedules[cast.id] || {};
         return Object.keys(slots).length > 0;
@@ -278,7 +289,16 @@
       activeCasts.forEach(cast => {
         const slots = daySchedules[cast.id] || {};
         
-        const timeKeys = Object.keys(slots).sort((a, b) => {
+        // ★過去時間をフィルタリング＆時系列ソート
+        const timeKeys = Object.keys(slots).filter(time => {
+          if (!isToday) return true; // 当日以外は全枠表示
+          const [h, m] = time.split(':').map(Number);
+          // リアルタイムが過ぎた過去枠は除外
+          if (h < curHour || (h === curHour && m < curMinute)) {
+            return false;
+          }
+          return true;
+        }).sort((a, b) => {
           const idxA = TIME_ORDER.indexOf(a);
           const idxB = TIME_ORDER.indexOf(b);
           if (idxA !== -1 && idxB !== -1) return idxA - idxB;
@@ -289,19 +309,23 @@
         card.className = 'bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2';
 
         let slotsHtml = '';
-        timeKeys.forEach(time => {
-          const status = slots[time];
-          const isSelected = selectedCast?.id === cast.id && selectedTime === time;
-          const isNG = status === 'ng';
+        if (timeKeys.length === 0) {
+          slotsHtml = '<p class="text-xs text-slate-400 italic py-1">※本日のご案内可能枠は終了しました</p>';
+        } else {
+          timeKeys.forEach(time => {
+            const status = slots[time];
+            const isSelected = selectedCast?.id === cast.id && selectedTime === time;
+            const isNG = status === 'ng';
 
-          slotsHtml += `
-            <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-              isNG ? 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-500 scale-105 shadow-md' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-            }">
-              ${status === 'ok' ? '〇 ' : '× '} ${time}
-            </button>
-          `;
-        });
+            slotsHtml += `
+              <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                isNG ? 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-500 scale-105 shadow-md' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+              }">
+                ${status === 'ok' ? '〇 ' : '× '} ${time}
+              </button>
+            `;
+          });
+        }
 
         card.innerHTML = `
           <div class="flex gap-3 items-center">
@@ -317,7 +341,7 @@
           <div class="pt-2 border-t border-slate-100">
             <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1.5 px-0.5">
               <span>ご案内時間を選択:</span>
-              <span class="text-pink-500 font-bold text-[10px]">横スクロール ➔</span>
+              ${timeKeys.length > 0 ? '<span class="text-pink-500 font-bold text-[10px]">横スクロール ➔</span>' : ''}
             </div>
             <div class="scroll-container-wrapper">
               <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar pr-6">
@@ -461,7 +485,6 @@
       const optionPrice = selectedOptions.reduce((sum, o) => sum + o.price, 0);
       const nominationFee = isNominationRepeat === true ? 1000 : 0;
       const admissionFee = isFirstVisit === true ? 1000 : 0;
-      // ★初回来店時は3000円割引
       const discount = isFirstVisit === true ? 3000 : 0;
 
       const total = Math.max(0, coursePrice + optionPrice + nominationFee + admissionFee - discount);
