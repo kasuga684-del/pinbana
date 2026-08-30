@@ -31,10 +31,10 @@
     <div class="flex justify-start border-b border-slate-200 bg-white rounded-t-2xl px-4 pt-2 gap-2 text-xs font-bold">
       <button onclick="switchTab('schedule')" id="tabSchedule" class="px-4 py-2.5 text-pink-600 border-b-2 border-pink-500">📅 出勤・空き枠管理</button>
       <button onclick="switchTab('casts')" id="tabCasts" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">👤 キャスト登録・編集</button>
-      <button onclick="switchTab('courses')" id="tabCourses" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">⏱ コース・料金設定</button>
+      <button onclick="switchTab('courses')" id="tabCourses" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">⏱ コース・オプション設定</button>
     </div>
 
-    <!-- TAB 1: シフト管理（10:00〜23:00対応） -->
+    <!-- TAB 1: シフト管理 -->
     <section id="secSchedule" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-4">
       <div class="flex gap-2 items-center">
         <label class="text-xs font-bold text-slate-500">日付を選択:</label>
@@ -52,13 +52,30 @@
       <div id="castList" class="space-y-4"></div>
     </section>
 
-    <!-- TAB 3: コース料金管理 -->
-    <section id="secCourses" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-4 hidden">
-      <div class="flex justify-between items-center">
-        <h2 class="text-xs font-bold text-slate-500">コース・料金設定</h2>
-        <button onclick="addNewCourse()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl">+ 新規コース追加</button>
+    <!-- TAB 3: コース・オプション管理 -->
+    <section id="secCourses" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-6 hidden">
+      <!-- コース一覧 -->
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xs font-bold text-slate-700">⏱ コース設定</h2>
+          <button onclick="addNewCourse()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl">+ 新規コース追加</button>
+        </div>
+        <div id="courseList" class="space-y-3"></div>
       </div>
-      <div id="courseList" class="space-y-3"></div>
+
+      <hr class="border-slate-200 my-6">
+
+      <!-- オプション一覧 -->
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xs font-bold text-slate-700">🛠 オプション設定</h2>
+            <p class="text-[10px] text-slate-400">お客様が予約時に任意で追加選択できる項目です</p>
+          </div>
+          <button onclick="addNewOption()" class="bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl">+ 新規オプション追加</button>
+        </div>
+        <div id="optionList" class="space-y-3"></div>
+      </div>
     </section>
 
   </main>
@@ -69,7 +86,6 @@
     const FILE_PATH = 'schedule.json';
     const BRANCH = 'main';
 
-    // 10:00 〜 23:00 までの時間枠リスト
     const TIME_LIST = [
       '10:00','10:30','11:00','11:30',
       '12:00','12:30','13:00','13:30',
@@ -92,18 +108,14 @@
     function utf8ToBase64(str) {
       const bytes = new TextEncoder().encode(str);
       let binary = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
       return btoa(binary);
     }
 
     function base64ToUtf8(base64) {
       const binary = atob(base64.replace(/\s/g, ''));
       const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       return new TextDecoder().decode(bytes);
     }
 
@@ -144,9 +156,11 @@
           const json = await res.json();
           fileSha = json.sha;
           rawData = JSON.parse(base64ToUtf8(json.content));
+          if (!rawData.options) rawData.options = [];
           renderScheduleEditor();
           renderCastEditor();
           renderCourseEditor();
+          renderOptionEditor();
           return;
         }
       } catch (err) {}
@@ -154,9 +168,11 @@
       try {
         const res = await fetch(`./schedule.json?t=${Date.now()}`);
         rawData = await res.json();
+        if (!rawData.options) rawData.options = [];
         renderScheduleEditor();
         renderCastEditor();
         renderCourseEditor();
+        renderOptionEditor();
       } catch (e) {
         alert('schedule.json の読み込みに失敗しました');
       }
@@ -178,7 +194,6 @@
         card.className = 'border border-slate-200 rounded-2xl p-4 space-y-3 bg-slate-50';
 
         let slotBtns = '';
-
         TIME_LIST.forEach(t => {
           const status = currentSlots[t];
           let color = 'bg-white border-slate-200 text-slate-400';
@@ -225,9 +240,7 @@
 
     function setAllSlots(date, castId, status) {
       if (!rawData.schedules[date][castId]) rawData.schedules[date][castId] = {};
-      TIME_LIST.forEach(t => {
-        rawData.schedules[date][castId][t] = status;
-      });
+      TIME_LIST.forEach(t => { rawData.schedules[date][castId][t] = status; });
       renderScheduleEditor();
     }
 
@@ -297,7 +310,7 @@
       }
     }
 
-    // --- TAB 3: コース料金管理 ---
+    // --- TAB 3: コース管理 ---
     function renderCourseEditor() {
       if (!rawData || !rawData.courses) return;
       const container = document.getElementById('courseList');
@@ -356,6 +369,59 @@
       }
     }
 
+    // --- TAB 3: オプション管理 ---
+    function renderOptionEditor() {
+      if (!rawData) return;
+      if (!rawData.options) rawData.options = [];
+      const container = document.getElementById('optionList');
+      container.innerHTML = '';
+
+      if (rawData.options.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-200">※登録されているオプションはありません</p>';
+        return;
+      }
+
+      rawData.options.forEach((opt, idx) => {
+        const div = document.createElement('div');
+        div.className = 'border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3';
+        div.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-xs text-slate-700">オプション #${idx + 1}</span>
+            <button onclick="deleteOption(${idx})" class="text-red-500 text-xs font-bold hover:underline">削除</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div>
+              <label class="text-slate-400 block text-[10px]">オプション名 (例: コスプレ / ローションなど)</label>
+              <input type="text" value="${opt.name}" oninput="rawData.options[${idx}].name = this.value" placeholder="オプション名" class="w-full p-2 border rounded-lg font-bold">
+            </div>
+            <div>
+              <label class="text-slate-400 block text-[10px]">追加料金 (¥)</label>
+              <input type="number" value="${opt.price}" oninput="rawData.options[${idx}].price = Number(this.value)" placeholder="料金" class="w-full p-2 border rounded-lg font-bold text-pink-600">
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function addNewOption() {
+      const newId = 'opt_' + Date.now();
+      if (!rawData.options) rawData.options = [];
+      rawData.options.push({
+        id: newId,
+        name: '新規オプション',
+        price: 2000
+      });
+      renderOptionEditor();
+    }
+
+    function deleteOption(idx) {
+      if (confirm('このオプションを削除しますか？')) {
+        rawData.options.splice(idx, 1);
+        renderOptionEditor();
+      }
+    }
+
     // --- 保存 ＆ GitHub Commit ---
     async function saveToGitHub() {
       const token = localStorage.getItem('pb_admin_token');
@@ -390,7 +456,7 @@
         const base64Content = utf8ToBase64(jsonString);
 
         const body = {
-          message: 'コース・シフト設定を更新',
+          message: 'コース・オプション・シフト設定を更新',
           content: base64Content,
           sha: fileSha,
           branch: BRANCH
