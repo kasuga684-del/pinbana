@@ -10,7 +10,6 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* 右端フェード（スクロール可能であることを示す影） */
     .scroll-container-wrapper {
       position: relative;
     }
@@ -56,7 +55,7 @@
       </div>
     </section>
 
-    <!-- STEP 3: コース ＆ キャストとのお遊び（指名選択） -->
+    <!-- STEP 3: コース ＆ オプション ＆ 本指名選択 -->
     <section id="courseSection" class="space-y-4 hidden border-t border-slate-200 pt-5">
       <div class="flex justify-between items-center">
         <label class="text-xs font-bold text-slate-500">3. ⏱ コース選択</label>
@@ -65,6 +64,12 @@
 
       <!-- コース一覧 -->
       <div id="courseContainer" class="grid grid-cols-2 gap-2"></div>
+
+      <!-- オプション選択エリア -->
+      <div id="optionSectionWrapper" class="space-y-2 hidden">
+        <label class="text-xs font-bold text-slate-500 block">🛠 オプション選択 (任意・複数選択可)</label>
+        <div id="optionContainer" class="grid grid-cols-2 gap-2"></div>
+      </div>
 
       <!-- キャストとのお遊び（本指名選択） -->
       <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
@@ -115,6 +120,7 @@
       <h3 class="font-bold text-slate-700 border-b border-slate-100 pb-2">🧾 お支払総額（概算内訳）</h3>
       <div class="space-y-1.5 text-slate-500">
         <div class="flex justify-between"><span>コース料金:</span><span id="pCourse">¥0</span></div>
+        <div class="flex justify-between" id="rowOptionWrap"><span>オプション料金:</span><span id="pOption">¥0</span></div>
         <div class="flex justify-between"><span>本指名料:</span><span id="pNomination">¥0</span></div>
         <div class="flex justify-between"><span>入会金:</span><span id="pAdmission">¥0</span></div>
       </div>
@@ -156,6 +162,7 @@
     let selectedCast = null;
     let selectedTime = '';
     let selectedCourse = null;
+    let selectedOptions = []; // 選択中オプションの配列
     let isNominationRepeat = null;
     let isFirstVisit = null;
 
@@ -200,6 +207,7 @@
           selectedCast = null;
           selectedTime = '';
           selectedCourse = null;
+          selectedOptions = [];
           isNominationRepeat = null;
           isFirstVisit = null;
           resetOptionButtons();
@@ -315,6 +323,7 @@
       selectedCast = scheduleData.casts.find(c => c.id === castId);
       selectedTime = time;
       selectedCourse = null;
+      selectedOptions = [];
       isNominationRepeat = null;
       isFirstVisit = null;
       resetOptionButtons();
@@ -326,6 +335,7 @@
       document.getElementById('userInfoSection').classList.remove('hidden');
 
       renderCourses();
+      renderOptions();
       renderCastList();
       updateCalculation();
 
@@ -374,6 +384,45 @@
       });
     }
 
+    function renderOptions() {
+      const wrapper = document.getElementById('optionSectionWrapper');
+      const container = document.getElementById('optionContainer');
+      container.innerHTML = '';
+
+      if (!scheduleData.options || scheduleData.options.length === 0) {
+        wrapper.classList.add('hidden');
+        return;
+      }
+
+      wrapper.classList.remove('hidden');
+
+      scheduleData.options.forEach(opt => {
+        const isSelected = selectedOptions.some(o => o.id === opt.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => toggleOption(opt);
+        btn.className = `p-2.5 rounded-xl border text-left font-bold transition-all flex justify-between items-center ${
+          isSelected ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+        }`;
+        btn.innerHTML = `
+          <span class="text-xs">${opt.name}</span>
+          <span class="text-xs font-bold text-pink-600">+¥${opt.price.toLocaleString()}</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    function toggleOption(opt) {
+      const idx = selectedOptions.findIndex(o => o.id === opt.id);
+      if (idx > -1) {
+        selectedOptions.splice(idx, 1);
+      } else {
+        selectedOptions.push(opt);
+      }
+      renderOptions();
+      updateCalculation();
+    }
+
     function setNomination(isRepeat) {
       isNominationRepeat = isRepeat;
       document.getElementById('nomFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
@@ -398,12 +447,14 @@
       document.getElementById('priceBreakdownSection').classList.remove('hidden');
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
+      const optionPrice = selectedOptions.reduce((sum, o) => sum + o.price, 0);
       const nominationFee = isNominationRepeat === true ? 1000 : 0;
       const admissionFee = isFirstVisit === true ? 1000 : 0;
 
-      const total = coursePrice + nominationFee + admissionFee;
+      const total = coursePrice + optionPrice + nominationFee + admissionFee;
 
       document.getElementById('pCourse').innerText = `¥${coursePrice.toLocaleString()}`;
+      document.getElementById('pOption').innerText = `¥${optionPrice.toLocaleString()}`;
       document.getElementById('pNomination').innerText = isNominationRepeat === null ? '未選択' : `¥${nominationFee.toLocaleString()}`;
       document.getElementById('pAdmission').innerText = isFirstVisit === null ? '未選択' : `¥${admissionFee.toLocaleString()}`;
       document.getElementById('pTotal').innerText = `¥${total.toLocaleString()}`;
@@ -448,9 +499,14 @@
       const phone = document.getElementById('custPhone').value.trim();
 
       const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
+      const optionPrice = selectedOptions.reduce((sum, o) => sum + o.price, 0);
       const nominationFee = isNominationRepeat === true ? 1000 : 0;
       const admissionFee = isFirstVisit === true ? 1000 : 0;
-      const total = coursePrice + nominationFee + admissionFee;
+      const total = coursePrice + optionPrice + nominationFee + admissionFee;
+
+      const optText = selectedOptions.length > 0 
+        ? selectedOptions.map(o => `${o.name}(+¥${o.price.toLocaleString()})`).join(', ') 
+        : 'なし';
 
       const messageText = 
 `WEB予約フォーム 
@@ -463,6 +519,7 @@
 ご希望日時：${selectedDate} ${selectedTime}〜
 指名キャスト：${selectedCast.name} (${isNominationRepeat ? '指名2回目以降' : '指名初めて'})
 選択コース：${selectedCourse.minutes}分コース
+オプション：${optText}
 
 【お支払概算合計】
 ¥${total.toLocaleString()}
