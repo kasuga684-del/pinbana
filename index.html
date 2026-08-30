@@ -66,9 +66,15 @@
       <div id="courseContainer" class="grid grid-cols-2 gap-2"></div>
 
       <!-- オプション選択エリア -->
-      <div id="optionSectionWrapper" class="space-y-2 hidden">
-        <label class="text-xs font-bold text-slate-500 block">🛠 オプション選択 (任意・複数選択可)</label>
-        <div id="optionContainer" class="grid grid-cols-2 gap-2"></div>
+      <div id="optionSectionWrapper" class="space-y-2 hidden pt-2">
+        <div class="flex justify-between items-center">
+          <label class="text-xs font-bold text-slate-700 block">🛠 オプション選択 (任意・複数選択可)</label>
+        </div>
+        <!-- 案内文言 -->
+        <p class="text-[11px] text-pink-600 bg-pink-50 border border-pink-200 rounded-xl p-2.5 font-bold text-center">
+          💡 オプションは女の子と合流してから決めても大丈夫です✨
+        </p>
+        <div id="optionContainer" class="grid grid-cols-2 gap-2 pt-1"></div>
       </div>
 
       <!-- キャストとのお遊び（本指名選択） -->
@@ -162,7 +168,7 @@
     let selectedCast = null;
     let selectedTime = '';
     let selectedCourse = null;
-    let selectedOptions = []; // 選択中オプションの配列
+    let selectedOptions = [];
     let isNominationRepeat = null;
     let isFirstVisit = null;
 
