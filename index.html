@@ -70,10 +70,24 @@
         <div class="flex justify-between items-center">
           <label class="text-xs font-bold text-slate-700 block">🛠 オプション選択 (任意・複数選択可)</label>
         </div>
-        <p class="text-[11px] text-pink-600 bg-pink-50 border border-pink-200 rounded-xl p-2.5 font-bold text-center">
-          💡 オプションは女の子と合流してから決めても大丈夫です✨
-        </p>
-        <div id="optionContainer" class="grid grid-cols-2 gap-2 pt-1"></div>
+        
+        <!-- 蘭専用の案内メッセージ -->
+        <div id="ranOptionNotice" class="bg-pink-50 border border-pink-200 rounded-xl p-3 text-center hidden">
+          <p class="text-xs text-pink-700 font-bold">
+            ✨ 個人オプションのため会ってからのお楽しみ ✨
+          </p>
+          <p class="text-[11px] text-slate-500 mt-0.5">
+            蘭のオプション詳細は合流時に直接ご確認ください。
+          </p>
+        </div>
+
+        <!-- 通常キャスト用の案内＆ボタン -->
+        <div id="normalOptionWrapper" class="space-y-2">
+          <p class="text-[11px] text-pink-600 bg-pink-50 border border-pink-200 rounded-xl p-2.5 font-bold text-center">
+            💡 オプションは女の子と合流してから決めても大丈夫です✨
+          </p>
+          <div id="optionContainer" class="grid grid-cols-2 gap-2 pt-1"></div>
+        </div>
       </div>
 
       <!-- キャストとのお遊び（本指名選択） -->
@@ -433,17 +447,37 @@
       });
     }
 
+    // オプションレンダリング（蘭専用の制御）
     function renderOptions() {
       const wrapper = document.getElementById('optionSectionWrapper');
       const container = document.getElementById('optionContainer');
+      const ranNotice = document.getElementById('ranOptionNotice');
+      const normalWrapper = document.getElementById('normalOptionWrapper');
+
       container.innerHTML = '';
+      wrapper.classList.remove('hidden');
+
+      // ★キャスト名が「蘭」を含む場合（「蘭」「らん」「Ran」など対応）
+      const isRan = selectedCast && (selectedCast.name.includes('蘭') || selectedCast.name.includes('らん'));
+
+      if (isRan) {
+        // 蘭の場合は通常オプションボタンを隠し、専用メッセージを表示
+        ranNotice.classList.remove('hidden');
+        normalWrapper.classList.add('hidden');
+        selectedOptions = []; // 選択中のオプションをリセット
+        return;
+      }
+
+      // 通常キャストの場合
+      ranNotice.classList.add('hidden');
 
       if (!scheduleData.options || scheduleData.options.length === 0) {
+        normalWrapper.classList.add('hidden');
         wrapper.classList.add('hidden');
         return;
       }
 
-      wrapper.classList.remove('hidden');
+      normalWrapper.classList.remove('hidden');
 
       scheduleData.options.forEach(opt => {
         const isSelected = selectedOptions.some(o => o.id === opt.id);
@@ -509,7 +543,6 @@
       document.getElementById('pOption').innerText = `¥${optionPrice.toLocaleString()}`;
       document.getElementById('pNomination').innerText = isNominationRepeat === null ? '未選択' : `¥${nominationFee.toLocaleString()}`;
       
-      // 特別指名料の表示
       const specialNomRow = document.getElementById('rowSpecialNomWrap');
       if (specialNomFee > 0) {
         specialNomRow.classList.remove('hidden');
@@ -577,9 +610,14 @@
       const discount = (isFirstVisit === true && !selectedCast.isRookie) ? 3000 : 0;
       const total = Math.max(0, coursePrice + optionPrice + nominationFee + specialNomFee + admissionFee - discount);
 
-      const optText = selectedOptions.length > 0 
-        ? selectedOptions.map(o => `${o.name}(+¥${o.price.toLocaleString()})`).join(', ') 
-        : 'なし';
+      const isRan = selectedCast && (selectedCast.name.includes('蘭') || selectedCast.name.includes('らん'));
+
+      let optText = 'なし';
+      if (isRan) {
+        optText = '個人オプションのため会ってから決定';
+      } else if (selectedOptions.length > 0) {
+        optText = selectedOptions.map(o => `${o.name}(+¥${o.price.toLocaleString()})`).join(', ');
+      }
 
       let discText = '';
       if (selectedCast.isRookie) {
@@ -588,7 +626,7 @@
         discText = '\n割引：🎉 オープン記念割引 (-¥3,000)';
       }
 
-      const specialNomText = specialFeeText = specialNomFee > 0 ? `\n特別指名料：+¥${specialNomFee.toLocaleString()}` : '';
+      const specialNomText = specialNomFee > 0 ? `\n特別指名料：+¥${specialNomFee.toLocaleString()}` : '';
 
       const visitLabel = isFirstVisit 
         ? (selectedCast.isRookie ? '初めて' : '初めて (3,000円OFF適応)') 
