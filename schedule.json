@@ -12,7 +12,8 @@
       "bust": "91",
       "cup": "G",
       "waist": "59",
-      "hip": "90"
+      "hip": "90",
+      "specialNominationFee": 0
     },
     {
       "id": "c1787122501997",
@@ -24,7 +25,8 @@
       "waist": "58",
       "hip": "86",
       "photo": "https://pinkbanana.jp/upload/cast/10_17800163095.jpg?1780016310",
-      "isRookie": false
+      "isRookie": false,
+      "specialNominationFee": 0
     },
     {
       "id": "c1787122603743",
@@ -36,7 +38,8 @@
       "waist": 58,
       "hip": "85",
       "photo": "https://pinkbanana.jp/upload/cast/13_17853691211.jpg?1785369121",
-      "isRookie": true
+      "isRookie": true,
+      "specialNominationFee": 0
     },
     {
       "id": "c1787988676168",
@@ -48,7 +51,8 @@
       "waist": "56",
       "hip": "85",
       "photo": "https://pinkbanana.jp/upload/cast/thumb_17.jpg?1787985579",
-      "isRookie": true
+      "isRookie": true,
+      "specialNominationFee": 0
     },
     {
       "id": "c1788842489925",
@@ -60,7 +64,8 @@
       "waist": "52",
       "hip": "83",
       "photo": "https://pinkbanana.jp/upload/cast/18_17885684621.jpg?1788568463",
-      "isRookie": true
+      "isRookie": true,
+      "specialNominationFee": 1000
     }
   ],
   "schedules": {
