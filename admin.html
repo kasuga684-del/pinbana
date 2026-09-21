@@ -3,88 +3,176 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>店舗管理画面 - シフト・キャスト管理</title>
+  <title>WEB予約フォーム</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .scroll-container-wrapper {
+      position: relative;
+    }
+    .scroll-container-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 28px;
+      background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.95));
+      pointer-events: none;
+      border-radius: 0 1rem 1rem 0;
+    }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-20">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-40">
 
-  <header class="bg-slate-900 text-white p-4 sticky top-0 z-30 shadow flex justify-between items-center max-w-4xl mx-auto">
-    <h1 class="text-base font-bold flex items-center gap-2">⚙ 店舗管理ダッシュボード</h1>
-    <button onclick="saveToGitHub()" id="saveBtn" class="bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition-all">
-      💾 変更を保存して公開
-    </button>
+  <header class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-200 p-4 text-center z-20 shadow-sm">
+    <h1 class="text-lg font-black tracking-wider text-pink-600">WEB RESERVATION</h1>
   </header>
 
-  <main class="max-w-4xl mx-auto p-4 space-y-6">
+  <main class="max-w-md mx-auto p-4 space-y-6">
 
-    <!-- GitHub Token 設定 -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-      <div class="flex justify-between items-center">
-        <label class="text-xs font-bold text-slate-600">🔑 GitHub Personal Access Token</label>
-        <span id="tokenStatus" class="text-[10px] text-slate-400">未設定</span>
+    <!-- STEP 1: 日にち選択 -->
+    <section>
+      <div class="flex justify-between items-center mb-2">
+        <label class="text-xs font-bold text-slate-500 block">1. 📅 予約希望日を選択</label>
+        <span class="text-[10px] text-pink-500 font-bold">横スクロール ➔</span>
       </div>
-      <input type="password" id="ghToken" oninput="saveToken()" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-pink-500 font-mono">
-      <p class="text-[10px] text-slate-400">※GitHubの「repo」権限を持つトークンを入力してください。</p>
-    </div>
-
-    <!-- タブ切り替え -->
-    <div class="flex justify-start border-b border-slate-200 bg-white rounded-t-2xl px-4 pt-2 gap-2 text-xs font-bold">
-      <button onclick="switchTab('schedule')" id="tabSchedule" class="px-4 py-2.5 text-pink-600 border-b-2 border-pink-500">📅 出勤・空き枠管理</button>
-      <button onclick="switchTab('casts')" id="tabCasts" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">👤 キャスト登録・編集</button>
-      <button onclick="switchTab('courses')" id="tabCourses" class="px-4 py-2.5 text-slate-400 border-b-2 border-transparent">⏱ コース・オプション設定</button>
-    </div>
-
-    <!-- TAB 1: シフト管理 -->
-    <section id="secSchedule" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-4">
-      <div class="flex gap-2 items-center">
-        <label class="text-xs font-bold text-slate-500">日付を選択:</label>
-        <input type="date" id="scheduleDateInput" onchange="renderScheduleEditor()" class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold outline-none focus:border-pink-500">
+      <div class="scroll-container-wrapper">
+        <div id="dateContainer" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar pr-6"></div>
       </div>
-      <div id="scheduleGrid" class="space-y-4"></div>
     </section>
 
-    <!-- TAB 2: キャスト管理 -->
-    <section id="secCasts" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-4 hidden">
-      <div class="flex justify-between items-center">
-        <h2 class="text-xs font-bold text-slate-500">登録キャスト一覧</h2>
-        <button onclick="addNewCast()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl">+ 新規キャスト追加</button>
+    <!-- STEP 2: キャスト ＆ 時間選択 -->
+    <section class="space-y-4">
+      <h2 id="selectedDateTitle" class="text-xs font-bold border-l-4 border-pink-500 pl-2 text-pink-600">
+        2. 👤 キャスト ＆ ご案内時間を選択
+      </h2>
+      <div id="castListContainer" class="space-y-4">
+        <p class="text-xs text-slate-400 italic">データを読み込み中...</p>
       </div>
-      <div id="castList" class="space-y-4"></div>
     </section>
 
-    <!-- TAB 3: コース・オプション管理 -->
-    <section id="secCourses" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-6 hidden">
-      <div class="space-y-3">
-        <div class="flex justify-between items-center">
-          <h2 class="text-xs font-bold text-slate-700">⏱ コース設定</h2>
-          <button onclick="addNewCourse()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl">+ 新規コース追加</button>
-        </div>
-        <div id="courseList" class="space-y-3"></div>
+    <!-- STEP 3: コース ＆ オプション ＆ 本指名選択 -->
+    <section id="courseSection" class="space-y-4 hidden border-t border-slate-200 pt-5">
+      <div class="flex justify-between items-center">
+        <label class="text-xs font-bold text-slate-500">3. ⏱ コース選択</label>
+        <span id="rookieBadge" class="text-[10px] bg-pink-50 text-pink-600 px-2 py-0.5 rounded border border-pink-200 font-bold hidden">🎉 新人割引適応中</span>
       </div>
 
-      <hr class="border-slate-200 my-6">
+      <!-- コース一覧 -->
+      <div id="courseContainer" class="grid grid-cols-2 gap-2"></div>
 
-      <div class="space-y-3">
+      <!-- オプション選択エリア -->
+      <div id="optionSectionWrapper" class="space-y-2 hidden pt-2">
         <div class="flex justify-between items-center">
-          <div>
-            <h2 class="text-xs font-bold text-slate-700">🛠 オプション設定</h2>
-            <p class="text-[10px] text-slate-400">お客様が予約時に任意で追加選択できる項目です</p>
-          </div>
-          <button onclick="addNewOption()" class="bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl">+ 新規オプション追加</button>
+          <label class="text-xs font-bold text-slate-700 block">🛠 オプション選択 (任意・複数選択可)</label>
         </div>
-        <div id="optionList" class="space-y-3"></div>
+        
+        <!-- 蘭専用の案内メッセージ -->
+        <div id="ranOptionNotice" class="bg-pink-50 border border-pink-200 rounded-xl p-3 text-center hidden">
+          <p class="text-xs text-pink-700 font-bold">
+            ✨ 個人オプションのため会ってからのお楽しみ ✨
+          </p>
+          <p class="text-[11px] text-slate-500 mt-0.5">
+            蘭のオプション詳細は合流時に直接ご確認ください。
+          </p>
+        </div>
+
+        <!-- 通常キャスト用の案内＆ボタン -->
+        <div id="normalOptionWrapper" class="space-y-2">
+          <p class="text-[11px] text-pink-600 bg-pink-50 border border-pink-200 rounded-xl p-2.5 font-bold text-center">
+            💡 オプションは女の子と合流してから決めても大丈夫です✨
+          </p>
+          <div id="optionContainer" class="grid grid-cols-2 gap-2 pt-1"></div>
+        </div>
       </div>
+
+      <!-- キャストとのお遊び（本指名選択） -->
+      <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <label id="castPlayTitle" class="text-xs text-slate-700 font-bold block">〇〇とのお遊び <span class="text-pink-500">*</span></label>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="setNomination(false)" id="nomFirstBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600">
+            初めて
+          </button>
+          <button type="button" onclick="setNomination(true)" id="nomRepeatBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600">
+            2回目以降
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: お客様情報入力 -->
+    <section id="userInfoSection" class="space-y-4 hidden border-t border-slate-200 pt-5">
+      <label class="text-xs font-bold text-slate-500 block">4. 📝 お客様情報の入力</label>
+      
+      <!-- 当店のご利用歴 -->
+      <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <div class="flex justify-between items-center">
+          <label class="text-xs text-slate-700 font-bold block">当店のご利用歴 <span class="text-pink-500">*</span></label>
+          <span id="firstVisitBadge" class="text-[10px] text-green-600 font-bold bg-green-50 border border-green-200 px-1.5 py-0.5 rounded">初来店は3,000円OFF</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="setFirstVisit(true)" id="visitFirstBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600">
+            初めて
+          </button>
+          <button type="button" onclick="setFirstVisit(false)" id="visitRepeatBtn" class="p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600">
+            2回目以降
+          </button>
+        </div>
+        <p id="rookieNoComboNote" class="text-[10px] text-amber-600 font-medium hidden">※新人キャスト指名時は新人特別料金が適用されるため、初回来店割引（3,000円引）との併用はできません。</p>
+      </div>
+
+      <!-- お名前 ＆ 電話番号 -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div>
+          <label class="text-xs text-slate-500 block mb-1">お名前 (偽名でも可) <span class="text-pink-500">*</span></label>
+          <input type="text" id="custName" oninput="updateCalculation()" placeholder="お名前を入力してください" class="w-full bg-slate-50 text-slate-800 p-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:bg-white focus:border-pink-500 transition-all">
+        </div>
+        <div>
+          <label class="text-xs text-slate-500 block mb-1">お電話番号 <span class="text-pink-500">*</span></label>
+          <input type="tel" id="custPhone" oninput="updateCalculation()" placeholder="例: 09012345678" class="w-full bg-slate-50 text-slate-800 p-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:bg-white focus:border-pink-500 transition-all">
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 5: 概算料金計算 -->
+    <section id="priceBreakdownSection" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2 text-xs hidden">
+      <h3 class="font-bold text-slate-700 border-b border-slate-100 pb-2">🧾 お支払総額（概算内訳）</h3>
+      <div class="space-y-1.5 text-slate-500">
+        <div class="flex justify-between"><span>コース料金:</span><span id="pCourse">¥0</span></div>
+        <div class="flex justify-between" id="rowOptionWrap"><span>オプション料金:</span><span id="pOption">¥0</span></div>
+        <div class="flex justify-between"><span>本指名料:</span><span id="pNomination">¥0</span></div>
+        <div class="flex justify-between hidden text-pink-600 font-bold" id="rowSpecialNomWrap"><span>特別指名料:</span><span id="pSpecialNom">¥0</span></div>
+        <div class="flex justify-between"><span>入会金:</span><span id="pAdmission">¥0</span></div>
+        <div class="flex justify-between text-green-600 font-bold hidden" id="rowDiscountWrap"><span>🎉 オープン記念割引:</span><span id="pDiscount">-¥3,000</span></div>
+      </div>
+      <div class="border-t border-slate-100 pt-2 flex justify-between font-bold text-base text-pink-600">
+        <span>概算合計金額:</span>
+        <span id="pTotal">¥0</span>
+      </div>
+      <p class="text-right text-[11px] text-slate-400 font-bold mt-1">※別途ホテル代</p>
     </section>
 
   </main>
 
-  <script>
-    const GITHUB_OWNER = 'kasuga684-del';
-    const GITHUB_REPO = 'pinbana';
-    const FILE_PATH = 'schedule.json';
-    const BRANCH = 'main';
+  <!-- フッターバー -->
+  <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 border-t border-slate-200 p-4 backdrop-blur-md z-30 space-y-2 shadow-lg">
+    <div class="flex justify-between items-center text-xs">
+      <span class="text-slate-400">選択状況:</span>
+      <span id="selectedInfoText" class="font-bold text-pink-600">未選択</span>
+    </div>
+    <button id="nextBtn" disabled onclick="submitReservation()" class="w-full bg-pink-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-3.5 rounded-xl shadow-md transition-all">
+      予約フォームを送信 (LINEヘ) ➔
+    </button>
+  </div>
 
-    const TIME_LIST = [
+  <script>
+    const LIFF_ID = '2010290704-NS1l65Na';
+
+    const TIME_ORDER = [
       '10:00','10:30','11:00','11:30',
       '12:00','12:30','13:00','13:30',
       '14:00','14:30','15:00','15:30',
@@ -94,402 +182,496 @@
       '22:00','22:30','23:00'
     ];
 
-    let rawData = null;
-    let fileSha = '';
+    let scheduleData = null;
+    let selectedDate = '';
+    let selectedCast = null;
+    let selectedTime = '';
+    let selectedCourse = null;
+    let selectedOptions = [];
+    let isNominationRepeat = null;
+    let isFirstVisit = null;
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date();
 
-    function getApiUrl() {
-      return `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
-    }
-
-    function utf8ToBase64(str) {
-      const bytes = new TextEncoder().encode(str);
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      return btoa(binary);
-    }
-
-    function base64ToUtf8(base64) {
-      const binary = atob(base64.replace(/\s/g, ''));
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      return new TextDecoder().decode(bytes);
-    }
-
-    window.onload = () => {
-      document.getElementById('scheduleDateInput').value = todayStr;
-      const savedToken = localStorage.getItem('pb_admin_token');
-      if (savedToken) {
-        document.getElementById('ghToken').value = savedToken;
-        document.getElementById('tokenStatus').innerText = '✅ 設定済み';
-        document.getElementById('tokenStatus').className = 'text-[10px] text-green-600 font-bold';
-      }
-      fetchData();
-    };
-
-    function saveToken() {
-      const t = document.getElementById('ghToken').value.trim();
-      localStorage.setItem('pb_admin_token', t);
-      document.getElementById('tokenStatus').innerText = t ? '✅ 設定済み' : '未設定';
-      document.getElementById('tokenStatus').className = t ? 'text-[10px] text-green-600 font-bold' : 'text-[10px] text-slate-400';
-    }
-
-    function switchTab(tab) {
-      ['schedule', 'casts', 'courses'].forEach(t => {
-        document.getElementById(`sec${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
-        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).className = 'px-4 py-2.5 text-slate-400 border-b-2 border-transparent';
-      });
-      document.getElementById(`sec${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
-      document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).className = 'px-4 py-2.5 text-pink-600 border-b-2 border-pink-500';
-    }
-
-    async function fetchData() {
-      const token = localStorage.getItem('pb_admin_token');
-      const headers = token ? { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } : { 'Accept': 'application/vnd.github.v3+json' };
-
+    window.addEventListener('DOMContentLoaded', async () => {
       try {
-        const res = await fetch(`${getApiUrl()}?ref=${BRANCH}&t=${Date.now()}`, { headers });
+        await liff.init({ liffId: LIFF_ID });
+      } catch (err) {
+        console.error('LIFF Init Error:', err);
+      }
+      initDateTabs();
+      loadData();
+    });
+
+    function initDateTabs() {
+      const container = document.getElementById('dateContainer');
+      container.innerHTML = '';
+
+      for (let i = 0; i < 30; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
+        const dayName = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+        const displayStr = `${d.getMonth() + 1}/${d.getDate()}(${dayName})`;
+
+        if (!selectedDate && i === 0) selectedDate = dateStr;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+          selectedDate === dateStr ? 'bg-pink-600 text-white border-pink-500 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+        }`;
+        btn.innerText = displayStr;
+        btn.onclick = () => {
+          selectedDate = dateStr;
+          selectedCast = null;
+          selectedTime = '';
+          selectedCourse = null;
+          selectedOptions = [];
+          isNominationRepeat = null;
+          isFirstVisit = null;
+          resetOptionButtons();
+          document.getElementById('courseSection').classList.add('hidden');
+          document.getElementById('userInfoSection').classList.add('hidden');
+          document.getElementById('priceBreakdownSection').classList.add('hidden');
+          initDateTabs();
+          renderCastList();
+          updateFooter();
+        };
+        container.appendChild(btn);
+      }
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch(`https://api.github.com/repos/kasuga684-del/pinbana/contents/schedule.json?ref=main&t=${Date.now()}`, {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
         if (res.ok) {
           const json = await res.json();
-          fileSha = json.sha;
-          rawData = JSON.parse(base64ToUtf8(json.content));
-          if (!rawData.options) rawData.options = [];
-          renderScheduleEditor();
-          renderCastEditor();
-          renderCourseEditor();
-          renderOptionEditor();
+          const binary = atob(json.content.replace(/\s/g, ''));
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          scheduleData = JSON.parse(new TextDecoder().decode(bytes));
+          renderCastList();
           return;
         }
       } catch (err) {}
 
       try {
-        const res = await fetch(`./schedule.json?t=${Date.now()}`);
-        rawData = await res.json();
-        if (!rawData.options) rawData.options = [];
-        renderScheduleEditor();
-        renderCastEditor();
-        renderCourseEditor();
-        renderOptionEditor();
-      } catch (e) {
-        alert('schedule.json の読み込みに失敗しました');
-      }
+        const res = await fetch('./schedule.json?t=' + Date.now());
+        scheduleData = await res.json();
+        renderCastList();
+      } catch (err) {}
     }
 
-    // --- TAB 1: シフト管理 ---
-    function renderScheduleEditor() {
-      if (!rawData) return;
-      const date = document.getElementById('scheduleDateInput').value;
-      const container = document.getElementById('scheduleGrid');
+    function renderCastList() {
+      if (!scheduleData) return;
+      document.getElementById('selectedDateTitle').innerText = `2. 👤 ${selectedDate} のキャスト ＆ 時間を選択`;
+
+      const container = document.getElementById('castListContainer');
       container.innerHTML = '';
 
-      if (!rawData.schedules) rawData.schedules = {};
-      if (!rawData.schedules[date]) rawData.schedules[date] = {};
+      const daySchedules = scheduleData.schedules[selectedDate] || {};
 
-      rawData.casts.forEach(cast => {
-        const currentSlots = rawData.schedules[date][cast.id] || {};
-        const card = document.createElement('div');
-        card.className = 'border border-slate-200 rounded-2xl p-4 space-y-3 bg-slate-50';
+      const now = new Date();
+      const todayYear = now.getFullYear();
+      const todayMonth = String(now.getMonth() + 1).padStart(2, '0');
+      const todayDay = String(now.getDate()).padStart(2, '0');
+      const todayStr = `${todayYear}-${todayMonth}-${todayDay}`;
+      const isToday = (selectedDate === todayStr);
 
-        let slotBtns = '';
-        TIME_LIST.forEach(t => {
-          const status = currentSlots[t];
-          let color = 'bg-white border-slate-200 text-slate-400';
-          let label = '-';
-          if (status === 'ok') { color = 'bg-green-500 text-white border-green-600 font-bold'; label = '〇'; }
-          if (status === 'ng') { color = 'bg-red-500 text-white border-red-600 font-bold'; label = '×'; }
+      const curHour = now.getHours();
+      const curMinute = now.getMinutes();
 
-          slotBtns += `
-            <button onclick="toggleSlot('${date}', '${cast.id}', '${t}')" class="px-1.5 py-1.5 rounded-lg border text-[11px] flex flex-col items-center justify-center transition-all ${color}">
-              <span class="font-medium">${t}</span>
-              <span class="text-xs font-bold">${label}</span>
-            </button>
-          `;
+      const activeCasts = scheduleData.casts.filter(cast => {
+        const slots = daySchedules[cast.id] || {};
+        return Object.keys(slots).length > 0;
+      });
+
+      if (activeCasts.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 italic bg-white p-4 rounded-xl border border-slate-200 text-center">本日出勤のキャストはございません</p>';
+        return;
+      }
+
+      activeCasts.forEach(cast => {
+        const slots = daySchedules[cast.id] || {};
+        
+        const timeKeys = Object.keys(slots).filter(time => {
+          if (!isToday) return true;
+          const [h, m] = time.split(':').map(Number);
+          if (h < curHour || (h === curHour && m < curMinute)) {
+            return false;
+          }
+          return true;
+        }).sort((a, b) => {
+          const idxA = TIME_ORDER.indexOf(a);
+          const idxB = TIME_ORDER.indexOf(b);
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          return a.localeCompare(b);
         });
 
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2';
+
+        let slotsHtml = '';
+        if (timeKeys.length === 0) {
+          slotsHtml = '<p class="text-xs text-slate-400 italic py-1">※本日のご案内可能枠は終了しました</p>';
+        } else {
+          timeKeys.forEach(time => {
+            const status = slots[time];
+            const isSelected = selectedCast?.id === cast.id && selectedTime === time;
+            const isNG = status === 'ng';
+
+            slotsHtml += `
+              <button ${isNG ? 'disabled' : ''} onclick="selectSlot('${cast.id}', '${time}')" class="flex-none px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                isNG ? 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed' : isSelected ? 'bg-pink-600 text-white border-pink-500 scale-105 shadow-md' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+              }">
+                ${status === 'ok' ? '〇 ' : '× '} ${time}
+              </button>
+            `;
+          });
+        }
+
+        const specialFee = Number(cast.specialNominationFee || 0);
+
         card.innerHTML = `
-          <div class="flex justify-between items-center">
-            <div class="flex items-center gap-2">
-              <img src="${cast.photo}" class="w-8 h-8 rounded-lg object-cover bg-slate-200" />
-              <span class="font-bold text-sm text-slate-800">${cast.name}</span>
-            </div>
-            <div class="flex gap-1.5 text-xs">
-              <button onclick="setAllSlots('${date}', '${cast.id}', 'ok')" class="px-2.5 py-1 bg-green-50 border border-green-300 text-green-700 rounded-lg font-bold hover:bg-green-100">全〇</button>
-              <button onclick="setAllSlots('${date}', '${cast.id}', 'ng')" class="px-2.5 py-1 bg-red-50 border border-red-300 text-red-700 rounded-lg font-bold hover:bg-red-100">全×</button>
-              <button onclick="clearAllSlots('${date}', '${cast.id}')" class="px-2.5 py-1 bg-slate-200 border border-slate-300 text-slate-600 rounded-lg font-bold hover:bg-slate-300">お休み (クリア)</button>
+          <div class="flex gap-3 items-center">
+            <img src="${cast.photo}" class="w-16 h-16 object-cover rounded-xl bg-slate-100 border border-slate-100" />
+            <div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <h3 class="font-bold text-base text-slate-800">${cast.name} <span class="text-xs text-slate-400">(${cast.age})</span></h3>
+                ${cast.isRookie ? '<span class="text-[9px] bg-pink-50 text-pink-600 px-1.5 py-0.5 rounded border border-pink-200 font-bold">新人</span>' : ''}
+                ${specialFee > 0 ? `<span class="text-[9px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-bold">特別指名料 +¥${specialFee.toLocaleString()}</span>` : ''}
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">T${cast.height} / B${cast.bust}(${cast.cup}) / W${cast.waist} / H${cast.hip}</p>
             </div>
           </div>
-          <div class="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-9 gap-1.5">
-            ${slotBtns}
+          <div class="pt-2 border-t border-slate-100">
+            <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1.5 px-0.5">
+              <span>ご案内時間を選択:</span>
+              ${timeKeys.length > 0 ? '<span class="text-pink-500 font-bold text-[10px]">横スクロール ➔</span>' : ''}
+            </div>
+            <div class="scroll-container-wrapper">
+              <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar pr-6">
+                ${slotsHtml}
+              </div>
+            </div>
           </div>
         `;
         container.appendChild(card);
       });
     }
 
-    function toggleSlot(date, castId, time) {
-      if (!rawData.schedules[date][castId]) rawData.schedules[date][castId] = {};
-      const cur = rawData.schedules[date][castId][time];
-      if (!cur) rawData.schedules[date][castId][time] = 'ok';
-      else if (cur === 'ok') rawData.schedules[date][castId][time] = 'ng';
-      else delete rawData.schedules[date][castId][time];
-      renderScheduleEditor();
-    }
+    function selectSlot(castId, time) {
+      selectedCast = scheduleData.casts.find(c => c.id === castId);
+      selectedTime = time;
+      selectedCourse = null;
+      selectedOptions = [];
+      isNominationRepeat = null;
+      isFirstVisit = null;
+      resetOptionButtons();
 
-    function setAllSlots(date, castId, status) {
-      if (!rawData.schedules[date][castId]) rawData.schedules[date][castId] = {};
-      TIME_LIST.forEach(t => { rawData.schedules[date][castId][t] = status; });
-      renderScheduleEditor();
-    }
+      document.getElementById('castPlayTitle').innerText = `${selectedCast.name}とのお遊び *`;
 
-    function clearAllSlots(date, castId) {
-      delete rawData.schedules[date][castId];
-      renderScheduleEditor();
-    }
-
-    // --- TAB 2: キャスト管理（特別指名料追加） ---
-    function renderCastEditor() {
-      if (!rawData || !rawData.casts) return;
-      const container = document.getElementById('castList');
-      container.innerHTML = '';
-
-      rawData.casts.forEach((cast, idx) => {
-        if (cast.specialNominationFee === undefined) cast.specialNominationFee = 0;
-
-        const div = document.createElement('div');
-        div.className = 'border border-slate-200 rounded-2xl p-4 space-y-3 bg-slate-50';
-        div.innerHTML = `
-          <div class="flex justify-between items-center">
-            <span class="font-bold text-sm text-slate-700">#${idx + 1} ${cast.name}</span>
-            <button onclick="deleteCast(${idx})" class="text-red-500 text-xs font-bold hover:underline">削除</button>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <div><label class="text-slate-400 block mb-0.5">名前</label><input type="text" value="${cast.name}" oninput="rawData.casts[${idx}].name = this.value" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">年齢</label><input type="text" value="${cast.age}" oninput="rawData.casts[${idx}].age = this.value" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">身長</label><input type="text" value="${cast.height}" oninput="rawData.casts[${idx}].height = this.value" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">カップ</label><input type="text" value="${cast.cup}" oninput="rawData.casts[${idx}].cup = this.value" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">バスト</label><input type="text" value="${cast.bust}" oninput="rawData.casts[${idx}].bust = this.value" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">ウエスト</label><input type="text" value="${cast.waist}" oninput="rawData.casts[${idx}].waist = this.value" class="w-full p-2 border rounded-lg"></div>
-            <div><label class="text-slate-400 block mb-0.5">ヒップ</label><input type="text" value="${cast.hip}" oninput="rawData.casts[${idx}].hip = this.value" class="w-full p-2 border rounded-lg"></div>
-            <div>
-              <label class="text-slate-400 block mb-0.5 font-bold text-pink-600">特別指名料 (¥)</label>
-              <input type="number" value="${cast.specialNominationFee || 0}" oninput="rawData.casts[${idx}].specialNominationFee = Number(this.value)" placeholder="0" class="w-full p-2 border rounded-lg font-bold text-pink-600">
-            </div>
-            <div class="flex items-center gap-2 pt-2 col-span-2">
-              <input type="checkbox" ${cast.isRookie ? 'checked' : ''} onchange="rawData.casts[${idx}].isRookie = this.checked" id="rookie_${idx}">
-              <label for="rookie_${idx}" class="font-bold text-pink-600">新人フラグ</label>
-            </div>
-          </div>
-          <div>
-            <label class="text-slate-400 block text-xs mb-0.5">写真URL</label>
-            <input type="text" value="${cast.photo}" oninput="rawData.casts[${idx}].photo = this.value" class="w-full p-2 border rounded-lg text-xs">
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function addNewCast() {
-      const newId = 'c' + Date.now();
-      if (!rawData.casts) rawData.casts = [];
-      rawData.casts.push({
-        id: newId,
-        name: '新規キャスト',
-        age: 20,
-        height: 160,
-        bust: 85,
-        cup: 'D',
-        waist: 58,
-        hip: 86,
-        photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60',
-        isRookie: false,
-        specialNominationFee: 0
-      });
-      renderCastEditor();
-    }
-
-    function deleteCast(idx) {
-      if (confirm('本当に削除しますか？')) {
-        rawData.casts.splice(idx, 1);
-        renderCastEditor();
+      const rookieNote = document.getElementById('rookieNoComboNote');
+      const firstVisitBadge = document.getElementById('firstVisitBadge');
+      if (selectedCast.isRookie) {
+        rookieNote.classList.remove('hidden');
+        firstVisitBadge.innerText = '新人割適応中';
+        firstVisitBadge.className = 'text-[10px] text-pink-600 font-bold bg-pink-50 border border-pink-200 px-1.5 py-0.5 rounded';
+        document.getElementById('visitFirstBtn').innerText = '初めて';
+      } else {
+        rookieNote.classList.add('hidden');
+        firstVisitBadge.innerText = '初来店は3,000円OFF';
+        firstVisitBadge.className = 'text-[10px] text-green-600 font-bold bg-green-50 border border-green-200 px-1.5 py-0.5 rounded';
+        document.getElementById('visitFirstBtn').innerText = '初めて (3,000円引)';
       }
+
+      const courseSec = document.getElementById('courseSection');
+      courseSec.classList.remove('hidden');
+      document.getElementById('userInfoSection').classList.remove('hidden');
+
+      renderCourses();
+      renderOptions();
+      renderCastList();
+      updateCalculation();
+
+      setTimeout(() => {
+        const yOffset = -80;
+        const y = courseSec.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }, 100);
     }
 
-    // --- TAB 3: コース管理 ---
-    function renderCourseEditor() {
-      if (!rawData || !rawData.courses) return;
-      const container = document.getElementById('courseList');
+    function resetOptionButtons() {
+      document.getElementById('nomFirstBtn').className = 'p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600';
+      document.getElementById('nomRepeatBtn').className = 'p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600';
+      document.getElementById('visitFirstBtn').className = 'p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600';
+      document.getElementById('visitRepeatBtn').className = 'p-2.5 rounded-xl border text-xs font-bold text-center border-slate-200 bg-slate-50 text-slate-600';
+    }
+
+    function renderCourses() {
+      const container = document.getElementById('courseContainer');
+      const rookieBadge = document.getElementById('rookieBadge');
       container.innerHTML = '';
 
-      rawData.courses.forEach((c, idx) => {
-        const div = document.createElement('div');
-        div.className = 'border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3';
-        div.innerHTML = `
-          <div class="flex justify-between items-center">
-            <span class="font-bold text-xs text-slate-700">コース #${idx + 1} (${c.minutes}分)</span>
-            <button onclick="deleteCourse(${idx})" class="text-red-500 text-xs font-bold hover:underline">削除</button>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-            <div>
-              <label class="text-slate-400 block text-[10px]">時間 (分)</label>
-              <input type="number" value="${c.minutes}" oninput="updateCourseMinutes(${idx}, this.value)" class="w-full p-2 border rounded-lg font-bold">
-            </div>
-            <div>
-              <label class="text-slate-400 block text-[10px]">通常料金 (¥)</label>
-              <input type="number" value="${c.priceNormal}" oninput="rawData.courses[${idx}].priceNormal = Number(this.value)" class="w-full p-2 border rounded-lg font-bold">
-            </div>
-            <div>
-              <label class="text-slate-400 block text-[10px]">新人料金 (¥)</label>
-              <input type="number" value="${c.priceRookie}" oninput="rawData.courses[${idx}].priceRookie = Number(this.value)" class="w-full p-2 border rounded-lg font-bold text-pink-600">
-            </div>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function updateCourseMinutes(idx, val) {
-      const min = Number(val);
-      rawData.courses[idx].minutes = min;
-      rawData.courses[idx].name = `${min}分コース`;
-    }
-
-    function addNewCourse() {
-      const newId = 'crs_' + Date.now();
-      if (!rawData.courses) rawData.courses = [];
-      rawData.courses.push({
-        id: newId,
-        name: '60分コース',
-        minutes: 60,
-        priceNormal: 15000,
-        priceRookie: 13000
-      });
-      renderCourseEditor();
-    }
-
-    function deleteCourse(idx) {
-      if (confirm('このコースを削除しますか？')) {
-        rawData.courses.splice(idx, 1);
-        renderCourseEditor();
+      if (selectedCast.isRookie) {
+        rookieBadge.classList.remove('hidden');
+      } else {
+        rookieBadge.classList.add('hidden');
       }
+
+      const sortedCourses = [...scheduleData.courses].sort((a, b) => a.minutes - b.minutes);
+
+      sortedCourses.forEach(c => {
+        const price = selectedCast.isRookie ? c.priceRookie : c.priceNormal;
+        const isSelected = selectedCourse?.id === c.id;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => { selectedCourse = c; renderCourses(); updateCalculation(); };
+        btn.className = `p-3 rounded-xl border text-left font-bold transition-all ${
+          isSelected ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+        }`;
+        btn.innerHTML = `
+          <div class="text-xs text-pink-600">${c.minutes}分コース</div>
+          <div class="text-sm mt-0.5 font-bold">¥${price.toLocaleString()}</div>
+        `;
+        container.appendChild(btn);
+      });
     }
 
-    // --- TAB 3: オプション管理 ---
-    function renderOptionEditor() {
-      if (!rawData) return;
-      if (!rawData.options) rawData.options = [];
-      const container = document.getElementById('optionList');
-      container.innerHTML = '';
+    // オプションレンダリング（蘭専用の制御）
+    function renderOptions() {
+      const wrapper = document.getElementById('optionSectionWrapper');
+      const container = document.getElementById('optionContainer');
+      const ranNotice = document.getElementById('ranOptionNotice');
+      const normalWrapper = document.getElementById('normalOptionWrapper');
 
-      if (rawData.options.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-200">※登録されているオプションはありません</p>';
+      container.innerHTML = '';
+      wrapper.classList.remove('hidden');
+
+      // ★キャスト名が「蘭」を含む場合（「蘭」「らん」「Ran」など対応）
+      const isRan = selectedCast && (selectedCast.name.includes('蘭') || selectedCast.name.includes('らん'));
+
+      if (isRan) {
+        // 蘭の場合は通常オプションボタンを隠し、専用メッセージを表示
+        ranNotice.classList.remove('hidden');
+        normalWrapper.classList.add('hidden');
+        selectedOptions = []; // 選択中のオプションをリセット
         return;
       }
 
-      rawData.options.forEach((opt, idx) => {
-        const div = document.createElement('div');
-        div.className = 'border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3';
-        div.innerHTML = `
-          <div class="flex justify-between items-center">
-            <span class="font-bold text-xs text-slate-700">オプション #${idx + 1}</span>
-            <button onclick="deleteOption(${idx})" class="text-red-500 text-xs font-bold hover:underline">削除</button>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <div>
-              <label class="text-slate-400 block text-[10px]">オプション名 (例: コスプレ / ローションなど)</label>
-              <input type="text" value="${opt.name}" oninput="rawData.options[${idx}].name = this.value" placeholder="オプション名" class="w-full p-2 border rounded-lg font-bold">
-            </div>
-            <div>
-              <label class="text-slate-400 block text-[10px]">追加料金 (¥)</label>
-              <input type="number" value="${opt.price}" oninput="rawData.options[${idx}].price = Number(this.value)" placeholder="料金" class="w-full p-2 border rounded-lg font-bold text-pink-600">
-            </div>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
+      // 通常キャストの場合
+      ranNotice.classList.add('hidden');
 
-    function addNewOption() {
-      const newId = 'opt_' + Date.now();
-      if (!rawData.options) rawData.options = [];
-      rawData.options.push({
-        id: newId,
-        name: '新規オプション',
-        price: 2000
-      });
-      renderOptionEditor();
-    }
-
-    function deleteOption(idx) {
-      if (confirm('このオプションを削除しますか？')) {
-        rawData.options.splice(idx, 1);
-        renderOptionEditor();
-      }
-    }
-
-    // --- 保存 ＆ GitHub Commit ---
-    async function saveToGitHub() {
-      const token = localStorage.getItem('pb_admin_token');
-      if (!token) {
-        alert('GitHub Token が設定されていません。上部の入力欄に入力してください。');
+      if (!scheduleData.options || scheduleData.options.length === 0) {
+        normalWrapper.classList.add('hidden');
+        wrapper.classList.add('hidden');
         return;
       }
 
-      const btn = document.getElementById('saveBtn');
-      btn.disabled = true;
-      btn.innerText = '保存中...';
+      normalWrapper.classList.remove('hidden');
 
-      try {
-        const checkRes = await fetch(`${getApiUrl()}?ref=${BRANCH}&t=${Date.now()}`, {
-          headers: { 
-            'Authorization': `token ${token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        
-        if (!checkRes.ok) {
-          if (checkRes.status === 401 || checkRes.status === 403) {
-            throw new Error('トークンが無効または期限切れです。');
-          }
-          throw new Error('ファイル情報の取得に失敗しました');
-        }
+      scheduleData.options.forEach(opt => {
+        const isSelected = selectedOptions.some(o => o.id === opt.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => toggleOption(opt);
+        btn.className = `p-2.5 rounded-xl border text-left font-bold transition-all flex justify-between items-center ${
+          isSelected ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+        }`;
+        btn.innerHTML = `
+          <span class="text-xs">${opt.name}</span>
+          <span class="text-xs font-bold text-pink-600">+¥${opt.price.toLocaleString()}</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
 
-        const checkJson = await checkRes.json();
-        fileSha = checkJson.sha;
+    function toggleOption(opt) {
+      const idx = selectedOptions.findIndex(o => o.id === opt.id);
+      if (idx > -1) {
+        selectedOptions.splice(idx, 1);
+      } else {
+        selectedOptions.push(opt);
+      }
+      renderOptions();
+      updateCalculation();
+    }
 
-        const jsonString = JSON.stringify(rawData, null, 2);
-        const base64Content = utf8ToBase64(jsonString);
+    function setNomination(isRepeat) {
+      isNominationRepeat = isRepeat;
+      document.getElementById('nomFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
+      document.getElementById('nomRepeatBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${isRepeat ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
+      updateCalculation();
+    }
 
-        const body = {
-          message: 'キャスト・料金・特別指名料を更新',
-          content: base64Content,
-          sha: fileSha,
-          branch: BRANCH
-        };
+    function setFirstVisit(val) {
+      isFirstVisit = val;
+      document.getElementById('visitFirstBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${val ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
+      document.getElementById('visitRepeatBtn').className = `p-2.5 rounded-xl border text-xs font-bold text-center ${!val ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`;
+      updateCalculation();
+    }
 
-        const res = await fetch(getApiUrl(), {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${token}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(body)
-        });
+    function updateCalculation() {
+      if (!selectedCast || !selectedCourse) {
+        document.getElementById('priceBreakdownSection').classList.add('hidden');
+        updateFooter();
+        return;
+      }
 
-        if (!res.ok) {
-          const errJson = await res.json();
-          throw new Error(errJson.message || '保存に失敗しました');
-        }
+      document.getElementById('priceBreakdownSection').classList.remove('hidden');
 
-        const resJson = await res.json();
-        fileSha = resJson.content.sha;
-        alert('✅ 変更をGitHubへ保存しました！');
-      } catch (err) {
-        alert('❌ 保存エラー: ' + err.message);
-      } finally {
+      const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
+      const optionPrice = selectedOptions.reduce((sum, o) => sum + o.price, 0);
+      const nominationFee = isNominationRepeat === true ? 1000 : 0;
+      const specialNomFee = Number(selectedCast.specialNominationFee || 0);
+      const admissionFee = isFirstVisit === true ? 1000 : 0;
+      
+      const discount = (isFirstVisit === true && !selectedCast.isRookie) ? 3000 : 0;
+
+      const total = Math.max(0, coursePrice + optionPrice + nominationFee + specialNomFee + admissionFee - discount);
+
+      document.getElementById('pCourse').innerText = `¥${coursePrice.toLocaleString()}`;
+      document.getElementById('pOption').innerText = `¥${optionPrice.toLocaleString()}`;
+      document.getElementById('pNomination').innerText = isNominationRepeat === null ? '未選択' : `¥${nominationFee.toLocaleString()}`;
+      
+      const specialNomRow = document.getElementById('rowSpecialNomWrap');
+      if (specialNomFee > 0) {
+        specialNomRow.classList.remove('hidden');
+        document.getElementById('pSpecialNom').innerText = `¥${specialNomFee.toLocaleString()}`;
+      } else {
+        specialNomRow.classList.add('hidden');
+      }
+
+      document.getElementById('pAdmission').innerText = isFirstVisit === null ? '未選択' : `¥${admissionFee.toLocaleString()}`;
+      
+      const discRow = document.getElementById('rowDiscountWrap');
+      if (isFirstVisit === true && !selectedCast.isRookie) {
+        discRow.classList.remove('hidden');
+      } else {
+        discRow.classList.add('hidden');
+      }
+
+      document.getElementById('pTotal').innerText = `¥${total.toLocaleString()}`;
+
+      updateFooter();
+    }
+
+    function updateFooter() {
+      const btn = document.getElementById('nextBtn');
+      const text = document.getElementById('selectedInfoText');
+
+      const name = document.getElementById('custName')?.value.trim();
+      const phone = document.getElementById('custPhone')?.value.trim();
+
+      if (!selectedCast || !selectedTime) {
+        text.innerText = '未選択';
+        btn.disabled = true;
+      } else if (!selectedCourse) {
+        text.innerText = `${selectedCast.name} ${selectedTime}~ (コース未選択)`;
+        btn.disabled = true;
+      } else if (isNominationRepeat === null) {
+        text.innerText = `「${selectedCast.name}とのお遊び」を選択してください`;
+        btn.disabled = true;
+      } else if (isFirstVisit === null) {
+        text.innerText = `「当店のご利用歴」を選択してください`;
+        btn.disabled = true;
+      } else if (!name || !phone) {
+        text.innerText = `お名前・電話番号を入力してください`;
+        btn.disabled = true;
+      } else {
+        text.innerText = `${selectedDate} ${selectedTime}~ / ${selectedCast.name} (${selectedCourse.minutes}分コース)`;
         btn.disabled = false;
-        btn.innerText = '💾 変更を保存して公開';
+      }
+    }
+
+    async function submitReservation() {
+      const btn = document.getElementById('nextBtn');
+      btn.disabled = true;
+      btn.innerText = '送信中...';
+
+      const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+
+      const coursePrice = selectedCast.isRookie ? selectedCourse.priceRookie : selectedCourse.priceNormal;
+      const optionPrice = selectedOptions.reduce((sum, o) => sum + o.price, 0);
+      const nominationFee = isNominationRepeat === true ? 1000 : 0;
+      const specialNomFee = Number(selectedCast.specialNominationFee || 0);
+      const admissionFee = isFirstVisit === true ? 1000 : 0;
+      
+      const discount = (isFirstVisit === true && !selectedCast.isRookie) ? 3000 : 0;
+      const total = Math.max(0, coursePrice + optionPrice + nominationFee + specialNomFee + admissionFee - discount);
+
+      const isRan = selectedCast && (selectedCast.name.includes('蘭') || selectedCast.name.includes('らん'));
+
+      let optText = 'なし';
+      if (isRan) {
+        optText = '個人オプションのため会ってから決定';
+      } else if (selectedOptions.length > 0) {
+        optText = selectedOptions.map(o => `${o.name}(+¥${o.price.toLocaleString()})`).join(', ');
+      }
+
+      let discText = '';
+      if (selectedCast.isRookie) {
+        discText = '\n割引：🎉 新人割引適応中 (※オープン記念割引との併用不可)';
+      } else if (isFirstVisit === true) {
+        discText = '\n割引：🎉 オープン記念割引 (-¥3,000)';
+      }
+
+      const specialNomText = specialNomFee > 0 ? `\n特別指名料：+¥${specialNomFee.toLocaleString()}` : '';
+
+      const visitLabel = isFirstVisit 
+        ? (selectedCast.isRookie ? '初めて' : '初めて (3,000円OFF適応)') 
+        : '2回目以降';
+
+      const messageText = 
+`WEB予約フォーム 
+送信ありがとうございます！
+
+お名前：${name}
+お電話番号：${phone}
+当店ご利用歴：${visitLabel}
+
+ご希望日時：${selectedDate} ${selectedTime}〜
+指名キャスト：${selectedCast.name} (${isNominationRepeat ? '指名2回目以降' : '指名初めて'})${specialNomText}
+選択コース：${selectedCourse.minutes}分コース
+オプション：${optText}${discText}
+
+【お支払概算合計】
+¥${total.toLocaleString()}
+※別途ホテル代がかかります
+
+上記の内容で予約のご希望を受け付けました
+
+※まだ予約は確定しておりません※
+
+ワンオペ店長が空き状況を確認の上、
+折り返し「予約確定メッセージ」をお送りいたします✨
+
+混雑状況によりご希望に添えない場合もございますので、
+ワンオペ店長からの返信を今しばらくお待ちくださいませ🙇‍♂️`;
+
+      if (liff.isInClient()) {
+        try {
+          await liff.sendMessages([{ type: 'text', text: messageText }]);
+          liff.closeWindow();
+        } catch (err) {
+          alert('送信エラー: ' + err.message);
+          btn.disabled = false;
+          btn.innerText = '予約フォームを送信 (LINEヘ) ➔';
+        }
+      } else {
+        alert('【テスト表示】LINE内では以下の文章が自動送信されます:\n\n' + messageText);
+        btn.disabled = false;
+        btn.innerText = '予約フォームを送信 (LINEヘ) ➔';
       }
     }
   </script>
