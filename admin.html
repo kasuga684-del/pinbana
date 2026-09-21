@@ -54,7 +54,6 @@
 
     <!-- TAB 3: コース・オプション管理 -->
     <section id="secCourses" class="bg-white p-4 rounded-b-2xl border-x border-b border-slate-200 shadow-sm space-y-6 hidden">
-      <!-- コース一覧 -->
       <div class="space-y-3">
         <div class="flex justify-between items-center">
           <h2 class="text-xs font-bold text-slate-700">⏱ コース設定</h2>
@@ -65,7 +64,6 @@
 
       <hr class="border-slate-200 my-6">
 
-      <!-- オプション一覧 -->
       <div class="space-y-3">
         <div class="flex justify-between items-center">
           <div>
@@ -249,13 +247,15 @@
       renderScheduleEditor();
     }
 
-    // --- TAB 2: キャスト管理 ---
+    // --- TAB 2: キャスト管理（特別指名料追加） ---
     function renderCastEditor() {
       if (!rawData || !rawData.casts) return;
       const container = document.getElementById('castList');
       container.innerHTML = '';
 
       rawData.casts.forEach((cast, idx) => {
+        if (cast.specialNominationFee === undefined) cast.specialNominationFee = 0;
+
         const div = document.createElement('div');
         div.className = 'border border-slate-200 rounded-2xl p-4 space-y-3 bg-slate-50';
         div.innerHTML = `
@@ -271,7 +271,11 @@
             <div><label class="text-slate-400 block mb-0.5">バスト</label><input type="text" value="${cast.bust}" oninput="rawData.casts[${idx}].bust = this.value" class="w-full p-2 border rounded-lg"></div>
             <div><label class="text-slate-400 block mb-0.5">ウエスト</label><input type="text" value="${cast.waist}" oninput="rawData.casts[${idx}].waist = this.value" class="w-full p-2 border rounded-lg"></div>
             <div><label class="text-slate-400 block mb-0.5">ヒップ</label><input type="text" value="${cast.hip}" oninput="rawData.casts[${idx}].hip = this.value" class="w-full p-2 border rounded-lg"></div>
-            <div class="flex items-center gap-2 pt-4">
+            <div>
+              <label class="text-slate-400 block mb-0.5 font-bold text-pink-600">特別指名料 (¥)</label>
+              <input type="number" value="${cast.specialNominationFee || 0}" oninput="rawData.casts[${idx}].specialNominationFee = Number(this.value)" placeholder="0" class="w-full p-2 border rounded-lg font-bold text-pink-600">
+            </div>
+            <div class="flex items-center gap-2 pt-2 col-span-2">
               <input type="checkbox" ${cast.isRookie ? 'checked' : ''} onchange="rawData.casts[${idx}].isRookie = this.checked" id="rookie_${idx}">
               <label for="rookie_${idx}" class="font-bold text-pink-600">新人フラグ</label>
             </div>
@@ -298,7 +302,8 @@
         waist: 58,
         hip: 86,
         photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60',
-        isRookie: false
+        isRookie: false,
+        specialNominationFee: 0
       });
       renderCastEditor();
     }
@@ -456,7 +461,7 @@
         const base64Content = utf8ToBase64(jsonString);
 
         const body = {
-          message: 'コース・オプション・シフト設定を更新',
+          message: 'キャスト・料金・特別指名料を更新',
           content: base64Content,
           sha: fileSha,
           branch: BRANCH
